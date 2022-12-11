@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type Member struct {
+type User struct {
 	Model
 	Username string
 	Password string
@@ -14,6 +14,6 @@ type Member struct {
 	Birth    time.Time
 }
 
-func (Member) TableName() string {
-	return "member"
+func (User) TableName() string {
+	return "user"
 }

@@ -2,7 +2,7 @@ package model
 
 type Order struct {
 	Model
-	MemberId       uint64
+	UserId         uint64
 	AddressName    string
 	AddressTel     string
 	AddressDetails string

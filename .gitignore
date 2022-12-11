@@ -6,7 +6,8 @@
 *.dylib
 tmp
 .idea
-conf
+conf/config.ini
+.air.conf
 
 # Test binary, built with `go test -c`
 *.test

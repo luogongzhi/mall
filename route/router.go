@@ -2,8 +2,9 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"mall/pkg"
+	api "mall/api/v1"
 	"mall/pkg/e"
+	"mall/serializer"
 	"net/http"
 )
 
@@ -12,8 +13,17 @@ func Router() *gin.Engine {
 	v1 := r.Group("api/v1")
 	{
 		v1.GET("ping", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{pkg.Code: http.StatusOK, pkg.MESSAGE: e.GetMsg(http.StatusOK)})
+			c.JSON(http.StatusOK, serializer.Response{
+				Code: http.StatusOK,
+				Msg:  e.GetMsg(http.StatusOK),
+			})
 		})
-		return r
+
+		// user
+		user := v1.Group("/user")
+		{
+			user.POST("/register", api.UserRegister)
+		}
 	}
+	return r
 }
