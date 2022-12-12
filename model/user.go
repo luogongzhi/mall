@@ -10,7 +10,7 @@ type User struct {
 	Password string
 	Tel      string
 	Email    string
-	Gender   bool
+	Gender   uint
 	Birth    time.Time
 }
 
