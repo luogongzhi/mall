@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	api "mall/api/v1"
+	"mall/middleware"
 	_ "mall/middleware"
 	"mall/pkg/e"
 	"mall/serializer"
@@ -28,12 +29,17 @@ func Router() *gin.Engine {
 		v1.POST("/user.login", registry.UserApi.Login)
 
 		// 需要登录
-		/*		authed := v1.Group("")
-				authed.Use(middleware.JWT())
-				{
-					// user模块
-					authed.GET("/user.list", registry.UserApi.List)
-				}*/
+		authed := v1.Group("")
+		authed.Use(middleware.JWT())
+		{
+			// user模块
+			authed.GET("/user.list", registry.UserApi.List)
+			authed.POST("/user.update", registry.UserApi.Update)
+			authed.GET("/user_address.list", registry.UserAddressApi.List)
+			authed.POST("/user_address.update", registry.UserAddressApi.Update)
+			authed.POST("/user_address.create", registry.UserAddressApi.Create)
+			authed.POST("/user_address.delete", registry.UserAddressApi.Delete)
+		}
 	}
 	return r
 }

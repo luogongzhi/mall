@@ -4,6 +4,19 @@ import (
 	"mall/model"
 )
 
+type UserLoginRegisterDTO struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type UserUpdateDTO struct {
+	Username string `json:"username"`
+	Tel      string `json:"tel"`
+	Email    string `json:"email"`
+	Gender   string `json:"gender"`
+	Birth    string `json:"birth"`
+}
+
 type UserVO struct {
 	Id       uint64 `json:"id"`
 	Username string `json:"username"`
@@ -13,8 +26,7 @@ type UserVO struct {
 	Birth    string `json:"birth"`
 }
 
-// BuildUserVO 序列化用户
-func BuildUserVO(user *model.User) UserVO {
+func NewUserVO(user *model.User) UserVO {
 	var gender string
 	switch user.Gender {
 	case 1:

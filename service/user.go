@@ -8,19 +8,16 @@ import (
 	"mall/pkg/utils"
 	"mall/serializer"
 	"net/http"
+	"time"
 )
 
-type UserService struct {
-	Username string `form:"username" json:"username" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
-}
+type UserService struct{}
 
 // Register 用户注册
-func (service UserService) Register(ctx context.Context) serializer.ResponseResult {
-
+func (service UserService) Register(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
 	// 判断用户名是否存在
-	_, exist, err := userDao.ExistOrNotByUserName(service.Username)
+	_, exist, err := userDao.ExistOrNotByUserName(dto.Username)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
@@ -36,8 +33,8 @@ func (service UserService) Register(ctx context.Context) serializer.ResponseResu
 
 	// 创建用户
 	err = userDao.CreateUser(&model.User{
-		Username: service.Username,
-		Password: utils.MD5(service.Password),
+		Username: dto.Username,
+		Password: utils.MD5(dto.Password),
 	})
 	if err != nil {
 		return serializer.ResponseResult{
@@ -45,6 +42,9 @@ func (service UserService) Register(ctx context.Context) serializer.ResponseResu
 			Msg:  e.GetMsg(e.ErrorDatabase),
 		}
 	}
+
+	// TODO cart init
+
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),
@@ -52,11 +52,10 @@ func (service UserService) Register(ctx context.Context) serializer.ResponseResu
 }
 
 // Login 用户登录
-func (service UserService) Login(ctx context.Context) serializer.ResponseResult {
-
+func (service UserService) Login(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
 	// 判断用户名是否存在
-	user, exist, err := userDao.ExistOrNotByUserName(service.Username)
+	user, exist, err := userDao.ExistOrNotByUserName(dto.Username)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
@@ -71,16 +70,16 @@ func (service UserService) Login(ctx context.Context) serializer.ResponseResult 
 	}
 
 	// 校验密码
-	if utils.MD5(service.Password) != user.Password {
+	if utils.MD5(dto.Password) != user.Password {
 		return serializer.ResponseResult{
 			Code: e.ErrorNotCompare,
 			Msg:  e.GetMsg(e.ErrorNotCompare),
 		}
 	}
 
-	//生成token
-	token, err := utils.GenerateToken(user.Id, service.Username)
-	if err != nil {
+	// 生成token
+	var token string
+	if token, err = utils.GenerateToken(user.Id, dto.Username); err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorAuthToken,
 			Msg:  e.GetMsg(e.ErrorAuthToken),
@@ -91,8 +90,65 @@ func (service UserService) Login(ctx context.Context) serializer.ResponseResult 
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),
 		Data: map[string]interface{}{
-			"user":  serializer.BuildUserVO(user),
+			"user":  serializer.NewUserVO(user),
 			"token": token,
 		},
+	}
+}
+
+// List 根据Id查询用户信息
+func (service UserService) List(ctx context.Context, id uint64) serializer.ResponseResult {
+	userDao := dao.NewUserDao(ctx)
+	// 根据id查询用户
+	user, _, _ := userDao.GetUserById(id)
+	return serializer.ResponseResult{
+		Code: http.StatusOK,
+		Msg:  e.GetMsg(http.StatusOK),
+		Data: map[string]interface{}{
+			"user": serializer.NewUserVO(user),
+		},
+	}
+}
+
+// Update 修改用户信息
+func (service UserService) Update(ctx context.Context, dto serializer.UserUpdateDTO, id uint64) serializer.ResponseResult {
+	userDao := dao.NewUserDao(ctx)
+
+	var gender uint
+	switch dto.Gender {
+	case "男":
+		gender = 1
+	case "女":
+		gender = 2
+	default:
+		gender = 3
+	}
+
+	birth, err := time.ParseInLocation("2006-01-02", dto.Birth, time.Local)
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDate,
+			Msg:  e.GetMsg(e.ErrorDate),
+		}
+	}
+
+	// 根据Id修改用户信息
+	err = userDao.UpdateUserById(id, &model.User{
+		Username: dto.Username,
+		Tel:      dto.Tel,
+		Email:    dto.Email,
+		Gender:   gender,
+		Birth:    birth,
+	})
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
+		}
+	}
+
+	return serializer.ResponseResult{
+		Code: http.StatusOK,
+		Msg:  e.GetMsg(http.StatusOK),
 	}
 }

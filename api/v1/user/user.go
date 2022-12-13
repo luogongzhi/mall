@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 	"mall/pkg/e"
+	"mall/pkg/utils"
 	"mall/serializer"
 	"mall/service"
 	"net/http"
@@ -11,6 +12,8 @@ import (
 type IUserApi interface {
 	Register(c *gin.Context)
 	Login(c *gin.Context)
+	List(c *gin.Context)
+	Update(c *gin.Context)
 }
 
 type userApiImplementation struct{}
@@ -22,9 +25,10 @@ func NewUserApi() IUserApi {
 
 // Register 用户注册
 func (*userApiImplementation) Register(c *gin.Context) {
-	var userRegisterService service.UserService
-	if err := c.ShouldBindJSON(&userRegisterService); err == nil {
-		res := userRegisterService.Register(c.Request.Context())
+	var userService service.UserService
+	var dto serializer.UserLoginRegisterDTO
+	if err := c.ShouldBindJSON(&dto); err == nil {
+		res := userService.Register(c.Request.Context(), dto)
 		c.JSON(http.StatusOK, res)
 	} else {
 		c.JSON(http.StatusBadRequest, serializer.ResponseResult{
@@ -36,9 +40,34 @@ func (*userApiImplementation) Register(c *gin.Context) {
 
 // Login 用户登陆
 func (*userApiImplementation) Login(c *gin.Context) {
-	var userLoginService service.UserService
-	if err := c.ShouldBindJSON(&userLoginService); err == nil {
-		res := userLoginService.Login(c.Request.Context())
+	var userService service.UserService
+	var dto serializer.UserLoginRegisterDTO
+	if err := c.ShouldBindJSON(&dto); err == nil {
+		res := userService.Login(c.Request.Context(), dto)
+		c.JSON(http.StatusOK, res)
+	} else {
+		c.JSON(http.StatusBadRequest, serializer.ResponseResult{
+			Code: e.InvalidParams,
+			Msg:  e.GetMsg(e.InvalidParams),
+		})
+	}
+}
+
+// List 根据Id查询用户基本信息
+func (*userApiImplementation) List(c *gin.Context) {
+	var userService service.UserService
+	claims, _ := utils.ParseToken(c.GetHeader("Authorization"))
+	res := userService.List(c.Request.Context(), claims.Id)
+	c.JSON(http.StatusOK, res)
+}
+
+// Update 用户基本信息修改
+func (*userApiImplementation) Update(c *gin.Context) {
+	var userService service.UserService
+	var dto serializer.UserUpdateDTO
+	claims, _ := utils.ParseToken(c.GetHeader("Authorization"))
+	if err := c.ShouldBindJSON(&dto); err == nil {
+		res := userService.Update(c.Request.Context(), dto, claims.Id)
 		c.JSON(http.StatusOK, res)
 	} else {
 		c.JSON(http.StatusBadRequest, serializer.ResponseResult{

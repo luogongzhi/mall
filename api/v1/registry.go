@@ -5,9 +5,11 @@ import (
 )
 
 type Registry struct {
-	UserApi user.IUserApi
+	UserApi        user.IUserApi
+	UserAddressApi user.IUserAddressApi
 }
 
 func (r *Registry) NewRegister() {
 	r.UserApi = user.NewUserApi()
+	r.UserAddressApi = user.NewUserAddressApi()
 }
