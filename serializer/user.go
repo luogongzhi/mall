@@ -2,20 +2,31 @@ package serializer
 
 import (
 	"mall/model"
-	"time"
 )
 
-type UserVO struct {
-	Id       uint64    `json:"id"`
-	Username string    `json:"username"`
-	Tel      string    `json:"tel"`
-	Email    string    `json:"email"`
-	Gender   string    `json:"gender"`
-	Birth    time.Time `json:"birth"`
+type UserLoginRegisterDTO struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
-// BuildUserVO 序列化用户
-func BuildUserVO(user *model.User) UserVO {
+type UserUpdateDTO struct {
+	Username string `json:"username"`
+	Tel      string `json:"tel"`
+	Email    string `json:"email"`
+	Gender   string `json:"gender"`
+	Birth    string `json:"birth"`
+}
+
+type UserVO struct {
+	Id       uint64 `json:"id"`
+	Username string `json:"username"`
+	Tel      string `json:"tel"`
+	Email    string `json:"email"`
+	Gender   string `json:"gender"`
+	Birth    string `json:"birth"`
+}
+
+func NewUserVO(user *model.User) UserVO {
 	var gender string
 	switch user.Gender {
 	case 1:
@@ -25,12 +36,13 @@ func BuildUserVO(user *model.User) UserVO {
 	default:
 		gender = "未知"
 	}
+
 	return UserVO{
 		Id:       user.Id,
 		Username: user.Username,
 		Tel:      user.Tel,
 		Email:    user.Email,
 		Gender:   gender,
-		Birth:    user.Birth,
+		Birth:    user.Birth.Format("2006-01-02"),
 	}
 }

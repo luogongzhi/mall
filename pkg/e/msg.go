@@ -6,10 +6,12 @@ var MsgFlags = map[int]string{
 	http.StatusOK: "成功",
 	InvalidParams: "请求参数错误",
 	ErrorDatabase: "数据库操作出错,请重试",
+	ErrorDate:     "日期错误",
 
-	ErrorExistUser:    "已存在该用户名",
-	ErrorNotExistUser: "该用户不存在",
-	ErrorNotCompare:   "账号密码错误",
+	ErrorExistUser:           "已存在该用户名",
+	ErrorNotExistUser:        "该用户不存在",
+	ErrorNotCompare:          "账号密码错误",
+	ErrorNotExistUserAddress: "该用户地址不存在",
 
 	ErrorAuthCheckTokenFail:        "Token鉴权失败",
 	ErrorAuthCheckTokenTimeout:     "Token已超时",

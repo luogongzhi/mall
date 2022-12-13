@@ -4,10 +4,8 @@
 *.dll
 *.so
 *.dylib
-tmp
 .idea
 conf/config.ini
-.air.conf
 
 # Test binary, built with `go test -c`
 *.test
