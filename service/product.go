@@ -13,7 +13,7 @@ type ProductService struct{}
 
 func (service *ProductService) Detail(ctx context.Context, id uint64) serializer.ResponseResult {
 	productDao := dao.NewProductDao(ctx)
-	product, exist, err := productDao.GetProductById(id)
+	product, exist, err := productDao.GetById(id)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
@@ -38,7 +38,7 @@ func (service *ProductService) Detail(ctx context.Context, id uint64) serializer
 
 func (service *ProductService) Create(ctx context.Context, dto serializer.ProductCreateDTO) serializer.ResponseResult {
 	productDao := dao.NewProductDao(ctx)
-	err := productDao.CreateProduct(&model.Product{
+	err := productDao.Create(&model.Product{
 		Title:     dto.Title,
 		Info:      dto.Info,
 		AttrValue: dto.AttrValue,
@@ -60,7 +60,7 @@ func (service *ProductService) Create(ctx context.Context, dto serializer.Produc
 
 func (service *ProductService) Delete(ctx context.Context, id uint64) serializer.ResponseResult {
 	productDao := dao.NewProductDao(ctx)
-	_, exist, err := productDao.GetProductById(id)
+	_, exist, err := productDao.GetById(id)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
@@ -74,7 +74,7 @@ func (service *ProductService) Delete(ctx context.Context, id uint64) serializer
 		}
 	}
 
-	err = productDao.DeleteProduct(id)
+	err = productDao.Delete(id)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
@@ -90,7 +90,7 @@ func (service *ProductService) Delete(ctx context.Context, id uint64) serializer
 
 func (service *ProductService) Update(ctx context.Context, dto serializer.ProductUpdateDTO) serializer.ResponseResult {
 	productDao := dao.NewProductDao(ctx)
-	_, exist, err := productDao.GetProductById(dto.Id)
+	_, exist, err := productDao.GetById(dto.Id)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
@@ -104,7 +104,7 @@ func (service *ProductService) Update(ctx context.Context, dto serializer.Produc
 		}
 	}
 
-	err = productDao.UpdateProduct(&model.Product{
+	err = productDao.Update(&model.Product{
 		Model:     model.Model{Id: dto.Id},
 		Title:     dto.Title,
 		Info:      dto.Info,
@@ -140,7 +140,7 @@ func (service *ProductService) List(ctx context.Context, dto serializer.Paginate
 		pageSize = 10
 	}
 
-	productList, err := productDao.GetProductList(pageNum, pageSize)
+	productList, err := productDao.GetList(pageNum, pageSize)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,

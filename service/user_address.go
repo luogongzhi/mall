@@ -14,7 +14,7 @@ type UserAddressService struct{}
 // List 根据用户Id查询用户地址信息
 func (service *UserAddressService) List(ctx context.Context, id uint64) serializer.ResponseResult {
 	useAddressDao := dao.NewUserAddressDao(ctx)
-	userAddress, exist, err := useAddressDao.GetUserAddressByUserId(id)
+	userAddress, exist, err := useAddressDao.GetByUserId(id)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
@@ -42,7 +42,7 @@ func (service *UserAddressService) Create(ctx context.Context, dto serializer.Us
 	userAddressDao := dao.NewUserAddressDao(ctx)
 
 	// 创建用户地址信息
-	err := userAddressDao.CreateUserAddress(&model.UserAddress{
+	err := userAddressDao.Create(&model.UserAddress{
 		UserId:         id,
 		Name:           dto.Name,
 		Tel:            dto.Tel,
@@ -66,7 +66,7 @@ func (service *UserAddressService) Delete(ctx context.Context, userAddressId uin
 	userAddressDao := dao.NewUserAddressDao(ctx)
 
 	// 删除用户地址信息
-	row, err := userAddressDao.DeleteUserAddressById(userId, userAddressId)
+	row, err := userAddressDao.DeleteById(userId, userAddressId)
 	if row == 0 {
 		return serializer.ResponseResult{
 			Code: e.ErrorNotExistUserAddress,
@@ -91,7 +91,7 @@ func (service *UserAddressService) Update(ctx context.Context, dto serializer.Us
 	userAddressDao := dao.NewUserAddressDao(ctx)
 
 	// 根据Id修改用户信息
-	row, err := userAddressDao.UpdateUserAddressById(dto.Id, &model.UserAddress{
+	row, err := userAddressDao.UpdateById(dto.Id, &model.UserAddress{
 		UserId:         id,
 		Name:           dto.Name,
 		Tel:            dto.Tel,
