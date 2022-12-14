@@ -16,6 +16,7 @@ type UserService struct{}
 // Register 用户注册
 func (service *UserService) Register(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
+	cartDao := dao.NewCartDao(ctx)
 	// 判断用户名是否存在
 	_, exist, err := userDao.ExistOrNotByUserName(dto.Username)
 	if err != nil {
@@ -43,7 +44,18 @@ func (service *UserService) Register(ctx context.Context, dto serializer.UserLog
 		}
 	}
 
-	// TODO cart init
+	// 初始化用户购物车
+	user, _, _ := userDao.ExistOrNotByUserName(dto.Username)
+	err = cartDao.CreateCart(&model.Cart{
+		UserId: user.Id,
+		Total:  0,
+	})
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
+		}
+	}
 
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
