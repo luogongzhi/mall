@@ -14,10 +14,6 @@ func NewUserDao(ctx context.Context) *UserDao {
 	return &UserDao{NewDBClient(ctx)}
 }
 
-func NewUserDaoByDB(db *gorm.DB) *UserDao {
-	return &UserDao{db}
-}
-
 // GetUserById 根据id获取用户
 func (dao *UserDao) GetUserById(id uint64) (user *model.User, exist bool, err error) {
 	var count int64

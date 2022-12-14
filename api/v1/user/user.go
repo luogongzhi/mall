@@ -12,7 +12,7 @@ import (
 type IUserApi interface {
 	Register(c *gin.Context)
 	Login(c *gin.Context)
-	List(c *gin.Context)
+	Detail(c *gin.Context)
 	Update(c *gin.Context)
 }
 
@@ -53,11 +53,11 @@ func (*userApiImplementation) Login(c *gin.Context) {
 	}
 }
 
-// List 根据Id查询用户基本信息
-func (*userApiImplementation) List(c *gin.Context) {
+// Detail 根据Id查询用户基本信息
+func (*userApiImplementation) Detail(c *gin.Context) {
 	var userService service.UserService
 	claims, _ := utils.ParseToken(c.GetHeader("Authorization"))
-	res := userService.List(c.Request.Context(), claims.Id)
+	res := userService.Detail(c.Request.Context(), claims.Id)
 	c.JSON(http.StatusOK, res)
 }
 

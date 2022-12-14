@@ -13,6 +13,8 @@ var MsgFlags = map[int]string{
 	ErrorNotCompare:          "账号密码错误",
 	ErrorNotExistUserAddress: "该用户地址不存在",
 
+	ErrorNotExistProduct: "该商品不存在",
+
 	ErrorAuthCheckTokenFail:        "Token鉴权失败",
 	ErrorAuthCheckTokenTimeout:     "Token已超时",
 	ErrorAuthToken:                 "Token生成失败",
