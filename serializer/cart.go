@@ -4,6 +4,11 @@ import (
 	"mall/model"
 )
 
+type CartCreateDeleteDTO struct {
+	ProductId uint64 `json:"product_id" binding:"required"`
+	Total     uint16 `json:"total" binding:"required""`
+}
+
 type CartVO struct {
 	CartId        uint64          `json:"cart_id"`
 	UserId        uint64          `json:"user_id"`

@@ -33,7 +33,7 @@ func (service *UserService) Register(ctx context.Context, dto serializer.UserLog
 	}
 
 	// 创建用户
-	err = userDao.CreateUser(&model.User{
+	err = userDao.Create(&model.User{
 		Username: dto.Username,
 		Password: utils.MD5(dto.Password),
 	})
@@ -46,7 +46,7 @@ func (service *UserService) Register(ctx context.Context, dto serializer.UserLog
 
 	// 初始化用户购物车
 	user, _, _ := userDao.ExistOrNotByUserName(dto.Username)
-	err = cartDao.CreateCart(&model.Cart{
+	err = cartDao.Create(&model.Cart{
 		UserId: user.Id,
 		Total:  0,
 	})
@@ -112,7 +112,7 @@ func (service *UserService) Login(ctx context.Context, dto serializer.UserLoginR
 func (service *UserService) Detail(ctx context.Context, id uint64) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
 	// 根据id查询用户
-	user, _, _ := userDao.GetUserById(id)
+	user, _, _ := userDao.GetById(id)
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),
@@ -145,7 +145,7 @@ func (service *UserService) Update(ctx context.Context, dto serializer.UserUpdat
 	}
 
 	// 根据Id修改用户信息
-	err = userDao.UpdateUserById(id, &model.User{
+	err = userDao.UpdateById(id, &model.User{
 		Username: dto.Username,
 		Tel:      dto.Tel,
 		Email:    dto.Email,

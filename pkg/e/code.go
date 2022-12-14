@@ -11,6 +11,7 @@ const (
 	ErrorNotExistUserAddress = 10005
 
 	ErrorNotExistProduct = 20001
+	ErrorProductTotal    = 20002
 
 	ErrorAuthCheckTokenFail        = 30001
 	ErrorAuthCheckTokenTimeout     = 30002

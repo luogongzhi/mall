@@ -14,6 +14,7 @@ var MsgFlags = map[int]string{
 	ErrorNotExistUserAddress: "该用户地址不存在",
 
 	ErrorNotExistProduct: "该商品不存在",
+	ErrorProductTotal:    "错误的商品数量",
 
 	ErrorAuthCheckTokenFail:        "Token鉴权失败",
 	ErrorAuthCheckTokenTimeout:     "Token已超时",
