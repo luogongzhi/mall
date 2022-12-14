@@ -10,6 +10,8 @@ const (
 	ErrorNotCompare          = 10004
 	ErrorNotExistUserAddress = 10005
 
+	ErrorNotExistProduct = 20001
+
 	ErrorAuthCheckTokenFail        = 30001
 	ErrorAuthCheckTokenTimeout     = 30002
 	ErrorAuthToken                 = 30003

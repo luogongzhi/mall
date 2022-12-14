@@ -33,12 +33,19 @@ func Router() *gin.Engine {
 		authed.Use(middleware.JWT())
 		{
 			// user模块
-			authed.GET("/user.list", registry.UserApi.List)
+			authed.GET("/user.detail", registry.UserApi.Detail)
 			authed.POST("/user.update", registry.UserApi.Update)
 			authed.GET("/user_address.list", registry.UserAddressApi.List)
 			authed.POST("/user_address.update", registry.UserAddressApi.Update)
 			authed.POST("/user_address.create", registry.UserAddressApi.Create)
 			authed.POST("/user_address.delete", registry.UserAddressApi.Delete)
+
+			// product模块
+			authed.GET("/product.list", registry.ProductApi.List)
+			authed.GET("/product.detail", registry.ProductApi.Detail)
+			authed.POST("/product.create", registry.ProductApi.Create)
+			authed.POST("/product.update", registry.ProductApi.Update)
+			authed.POST("/product.delete", registry.ProductApi.Delete)
 		}
 	}
 	return r

@@ -14,7 +14,7 @@ import (
 type UserService struct{}
 
 // Register 用户注册
-func (service UserService) Register(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
+func (service *UserService) Register(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
 	// 判断用户名是否存在
 	_, exist, err := userDao.ExistOrNotByUserName(dto.Username)
@@ -52,7 +52,7 @@ func (service UserService) Register(ctx context.Context, dto serializer.UserLogi
 }
 
 // Login 用户登录
-func (service UserService) Login(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
+func (service *UserService) Login(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
 	// 判断用户名是否存在
 	user, exist, err := userDao.ExistOrNotByUserName(dto.Username)
@@ -96,8 +96,8 @@ func (service UserService) Login(ctx context.Context, dto serializer.UserLoginRe
 	}
 }
 
-// List 根据Id查询用户信息
-func (service UserService) List(ctx context.Context, id uint64) serializer.ResponseResult {
+// Detail 根据Id查询用户信息
+func (service *UserService) Detail(ctx context.Context, id uint64) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
 	// 根据id查询用户
 	user, _, _ := userDao.GetUserById(id)
@@ -111,7 +111,7 @@ func (service UserService) List(ctx context.Context, id uint64) serializer.Respo
 }
 
 // Update 修改用户信息
-func (service UserService) Update(ctx context.Context, dto serializer.UserUpdateDTO, id uint64) serializer.ResponseResult {
+func (service *UserService) Update(ctx context.Context, dto serializer.UserUpdateDTO, id uint64) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
 
 	var gender uint

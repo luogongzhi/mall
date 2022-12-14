@@ -14,10 +14,6 @@ func NewUserAddressDao(ctx context.Context) *UserAddress {
 	return &UserAddress{NewDBClient(ctx)}
 }
 
-func NewUserAddressDaoByDB(db *gorm.DB) *UserAddress {
-	return &UserAddress{db}
-}
-
 // GetUserAddressByUserId 根据用户id获取用户地址信息
 func (dao *UserAddress) GetUserAddressByUserId(userId uint64) (userAddress []*model.UserAddress, exist bool, err error) {
 	var count int64
