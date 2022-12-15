@@ -6,7 +6,7 @@ import (
 
 type CartCreateDeleteDTO struct {
 	ProductId uint64 `json:"product_id" binding:"required"`
-	Total     uint16 `json:"total" binding:"required""`
+	Total     uint16 `json:"total" binding:"required"`
 }
 
 type CartVO struct {

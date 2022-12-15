@@ -7,7 +7,7 @@ type ProductVO struct {
 	Title     string  `json:"title"`
 	Info      string  `json:"info"`
 	Price     float64 `json:"price"`
-	Total     uint64  `json:"total"`
+	Total     uint16  `json:"total"`
 	AttrValue string  `json:"attr_value"`
 }
 
@@ -15,7 +15,7 @@ type ProductCreateDTO struct {
 	Title     string  `json:"title" binding:"required"`
 	Info      string  `json:"info" binding:"required"`
 	Price     float64 `json:"price" binding:"required"`
-	Total     uint64  `json:"total" binding:"required"`
+	Total     uint16  `json:"total" binding:"required"`
 	AttrValue string  `json:"attr_value" binding:"required"`
 }
 
@@ -24,7 +24,7 @@ type ProductUpdateDTO struct {
 	Title     string  `json:"title" binding:"required"`
 	Info      string  `json:"info" binding:"required"`
 	Price     float64 `json:"price" binding:"required"`
-	Total     uint64  `json:"total" binding:"required"`
+	Total     uint16  `json:"total" binding:"required"`
 	AttrValue string  `json:"attr_value" binding:"required"`
 }
 

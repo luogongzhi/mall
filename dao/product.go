@@ -27,8 +27,12 @@ func (dao *ProductDao) Create(product *model.Product) (err error) {
 	return dao.DB.Model(&model.Product{}).Create(&product).Error
 }
 
-func (dao *ProductDao) Update(product *model.Product) (err error) {
-	return dao.DB.Where("id = ?", product.Id).Updates(&product).Error
+func (dao *ProductDao) UpdateProduct(product *model.Product) (err error) {
+	return dao.DB.Select("*").Omit("created_at").Where("id = ?", product.Id).Updates(&product).Error
+}
+
+func (dao *ProductDao) UpdateProductTotal(product *model.Product) (err error) {
+	return dao.DB.Select("id", "total").Where("id = ?", product.Id).Updates(&product).Error
 }
 
 func (dao *ProductDao) Delete(id uint64) (err error) {

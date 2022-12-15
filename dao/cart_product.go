@@ -34,6 +34,9 @@ func (dao *CartProductDao) DeleteByProductId(cartProduct *model.CartProduct) err
 	return dao.DB.Where("cart_id = ? AND product_id = ?", cartProduct.CartId, cartProduct.ProductId).Delete(&model.CartProduct{}).Error
 }
 
+func (dao *CartProductDao) DeleteByCartId(cartId uint64) error {
+	return dao.DB.Where("cart_id = ?", cartId).Delete(&model.CartProduct{}).Error
+}
 func (dao *CartProductDao) GetByProductId(cartProduct *model.CartProduct) (returnCartProduct *model.CartProduct, exist bool, err error) {
 	var count int64
 	err = dao.DB.Model(&model.CartProduct{}).Where("cart_id = ? AND product_id = ?", cartProduct.CartId, cartProduct.ProductId).Find(&returnCartProduct).Count(&count).Error
