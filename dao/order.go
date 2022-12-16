@@ -36,3 +36,7 @@ func (dao *OrderDao) GetListByUserId(userId uint64) (orderList *[]model.Order, e
 	err = dao.DB.Model(&model.Order{}).Where("user_id = ?", userId).Scan(&orderList).Error
 	return orderList, err
 }
+
+func (dao *OrderDao) DeleteById(id uint64) (err error) {
+	return dao.DB.Where("id = ?", id).Delete(&model.Order{}).Error
+}

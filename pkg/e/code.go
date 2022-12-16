@@ -22,5 +22,6 @@ const (
 
 	ErrorNotExistCartProduct = 50001
 
-	ErrorNotExistOrder = 60001
+	ErrorNotExistOrder  = 60001
+	ErrortOrderFinished = 60002
 )

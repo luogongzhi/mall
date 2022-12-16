@@ -22,3 +22,7 @@ func (dao *OrderProductDao) GetListByOrderId(orderId uint64) (returnOrderProduct
 	err = dao.DB.Model(&model.OrderProduct{}).Where("order_id = ?", orderId).Scan(&returnOrderProduct).Error
 	return returnOrderProduct, err
 }
+
+func (dao *OrderProductDao) DeleteByOrderId(orderId uint64) (err error) {
+	return dao.DB.Where("order_id = ?", orderId).Delete(&model.OrderProduct{}).Error
+}

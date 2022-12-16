@@ -25,7 +25,8 @@ var MsgFlags = map[int]string{
 
 	ErrorNotExistCartProduct: "购物车中未添加商品",
 
-	ErrorNotExistOrder: "订单不存在",
+	ErrorNotExistOrder:  "订单不存在",
+	ErrortOrderFinished: "订单已完成，无法取消",
 }
 
 func GetMsg(code int) string {

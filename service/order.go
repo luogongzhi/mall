@@ -257,3 +257,84 @@ func (service *OrderService) List(ctx context.Context, userId uint64) serializer
 		Data: orderVOList,
 	}
 }
+
+func (service *OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) serializer.ResponseResult {
+	orderDao := dao.NewOrderDao(ctx)
+	orderProductDao := dao.NewOrderProductDao(ctx)
+	productDao := dao.NewProductDao(ctx)
+
+	//订单是不是用户的
+	order, exist, err := orderDao.GetByOrderId(userId, orderId)
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
+		}
+	}
+	if !exist {
+		return serializer.ResponseResult{
+			Code: e.ErrorNotExistProduct,
+			Msg:  e.GetMsg(e.ErrorNotExistProduct),
+		}
+	}
+
+	// 订单是否未完成
+	if order.Status {
+		return serializer.ResponseResult{
+			Code: e.ErrortOrderFinished,
+			Msg:  e.GetMsg(e.ErrortOrderFinished),
+		}
+	}
+
+	// 查询订单的order_product
+	var orderProductList *[]model.OrderProduct
+	orderProductList, err = orderProductDao.GetListByOrderId(orderId)
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
+		}
+	}
+
+	// 根据订单Id删除order_product
+	err = orderProductDao.DeleteByOrderId(orderId)
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
+		}
+	}
+
+	//遍历 order_product list，根据product_id查询对应商品
+	for _, orderProduct := range *orderProductList {
+		var product *model.Product
+		product, exist, err = productDao.GetById(orderProduct.ProductId)
+		//如果商品存在，则将商品total加上
+		if exist {
+			err = productDao.UpdateProductTotal(&model.Product{
+				Model: model.Model{Id: orderProduct.ProductId},
+				Total: product.Total + orderProduct.Total,
+			})
+			if err != nil {
+				return serializer.ResponseResult{
+					Code: e.ErrorDatabase,
+					Msg:  e.GetMsg(e.ErrorDatabase),
+				}
+			}
+		}
+	}
+
+	// 删除order
+	err = orderDao.DeleteById(orderId)
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
+		}
+	}
+
+	return serializer.ResponseResult{
+		Code: http.StatusOK,
+		Msg:  e.GetMsg(http.StatusOK),
+	}
+}

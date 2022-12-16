@@ -56,6 +56,7 @@ func Router() *gin.Engine {
 			authed.GET("/order.list", registry.OrderApi.List)
 			authed.POST("/order.create", registry.OrderApi.Create)
 			authed.POST("/order.update", registry.OrderApi.Update)
+			authed.POST("/order.delete", registry.OrderApi.Delete)
 		}
 	}
 	return r
