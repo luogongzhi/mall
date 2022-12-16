@@ -207,3 +207,53 @@ func (service *OrderService) Update(ctx context.Context, userId uint64, dto seri
 		Msg:  e.GetMsg(http.StatusOK),
 	}
 }
+
+func (service *OrderService) List(ctx context.Context, userId uint64) serializer.ResponseResult {
+	orderDao := dao.NewOrderDao(ctx)
+	orderProductDao := dao.NewOrderProductDao(ctx)
+
+	// 获取用户订单列
+	orderList, err := orderDao.GetListByUserId(userId)
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
+		}
+	}
+	if orderList == nil {
+		return serializer.ResponseResult{
+			Code: http.StatusOK,
+			Msg:  e.GetMsg(http.StatusOK),
+		}
+	}
+
+	// 封装返回的订单列
+	var orderVOList []*serializer.OrderVO
+	for _, order := range *orderList {
+		var orderProductVOList []serializer.OrderProductVO
+		var orderProductList *[]model.OrderProduct
+		// 获得对于订单的订单商品列
+		orderProductList, err = orderProductDao.GetListByOrderId(order.Id)
+		if err != nil {
+			return serializer.ResponseResult{
+				Code: e.ErrorDatabase,
+				Msg:  e.GetMsg(e.ErrorDatabase),
+			}
+		}
+		for _, orderProduct := range *orderProductList {
+			orderProductVO := serializer.OrderProductVO{
+				ProductId: orderProduct.ProductId,
+				Total:     orderProduct.Total,
+			}
+			orderProductVOList = append(orderProductVOList, orderProductVO)
+		}
+		orderVO := serializer.NewOrderVO(&order, orderProductVOList)
+		orderVOList = append(orderVOList, &orderVO)
+	}
+
+	return serializer.ResponseResult{
+		Code: http.StatusOK,
+		Msg:  e.GetMsg(http.StatusOK),
+		Data: orderVOList,
+	}
+}

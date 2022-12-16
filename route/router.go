@@ -53,6 +53,7 @@ func Router() *gin.Engine {
 			authed.POST("/cart.delete", registry.CartApi.Delete)
 
 			//order模块
+			authed.GET("/order.list", registry.OrderApi.List)
 			authed.POST("/order.create", registry.OrderApi.Create)
 			authed.POST("/order.update", registry.OrderApi.Update)
 		}

@@ -17,3 +17,8 @@ func NewOrderProductDao(ctx context.Context) *OrderProductDao {
 func (dao *OrderProductDao) Create(orderProduct *model.OrderProduct) (err error) {
 	return dao.DB.Model(&model.OrderProduct{}).Create(&orderProduct).Error
 }
+
+func (dao *OrderProductDao) GetListByOrderId(orderId uint64) (returnOrderProduct *[]model.OrderProduct, err error) {
+	err = dao.DB.Model(&model.OrderProduct{}).Where("order_id = ?", orderId).Scan(&returnOrderProduct).Error
+	return returnOrderProduct, err
+}

@@ -12,6 +12,7 @@ import (
 type IOrderApi interface {
 	Create(c *gin.Context)
 	Update(c *gin.Context)
+	List(c *gin.Context)
 }
 
 type orderApiImplementation struct{}
@@ -48,4 +49,11 @@ func (*orderApiImplementation) Update(c *gin.Context) {
 			Msg:  e.GetMsg(e.InvalidParams),
 		})
 	}
+}
+
+func (*orderApiImplementation) List(c *gin.Context) {
+	var OrderService service.OrderService
+	claims, _ := utils.ParseToken(c.GetHeader("Authorization"))
+	res := OrderService.List(c.Request.Context(), claims.Id)
+	c.JSON(http.StatusOK, res)
 }

@@ -31,3 +31,8 @@ func (dao *OrderDao) GetByOrderId(userId, orderId uint64) (order *model.Order, e
 func (dao *OrderDao) Update(order *model.Order) error {
 	return dao.DB.Where("id = ?", order.Id).Updates(&order).Error
 }
+
+func (dao *OrderDao) GetListByUserId(userId uint64) (orderList *[]model.Order, err error) {
+	err = dao.DB.Model(&model.Order{}).Where("user_id = ?", userId).Scan(&orderList).Error
+	return orderList, err
+}
