@@ -24,6 +24,8 @@ var MsgFlags = map[int]string{
 	ErrorNotEnoughProduct: "该商品库存不足",
 
 	ErrorNotExistCartProduct: "购物车中未添加商品",
+
+	ErrorNotExistOrder: "订单不存在",
 }
 
 func GetMsg(code int) string {

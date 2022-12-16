@@ -11,7 +11,7 @@ type OrderUpdateDTO struct {
 	AddressName    string `json:"address_name"`
 	AddressTel     string `json:"address_tel"`
 	AddressDetails string `json:"address_details"`
-	Status         bool   `json:"status"`
+	Status         string `json:"status"`
 }
 
 type OrderDeleteDTO struct {
@@ -30,3 +30,24 @@ type OrderVO struct {
 	TotalAmount    float64          `json:"total_amount"`
 	Status         string           `json:"status"`
 }
+
+//func NewOrderVO(user *model.User) UserVO {
+//	var gender string
+//	switch user.Gender {
+//	case 1:
+//		gender = "男"
+//	case 2:
+//		gender = "女"
+//	default:
+//		gender = "未知"
+//	}
+//
+//	return UserVO{
+//		Id:       user.Id,
+//		Username: user.Username,
+//		Tel:      user.Tel,
+//		Email:    user.Email,
+//		Gender:   gender,
+//		Birth:    user.Birth.Format("2006-01-02"),
+//	}
+//}

@@ -62,7 +62,9 @@ func (service *OrderService) Create(ctx context.Context, userId uint64, dto seri
 			return serializer.ResponseResult{
 				Code: e.ErrorNotExistProduct,
 				Msg:  e.GetMsg(e.ErrorNotExistProduct),
-				Data: cartProduct.ProductId,
+				Data: map[string]uint64{
+					"productId": cartProduct.ProductId,
+				},
 			}
 		}
 		// 如果购物车中的商品件数 > 该商品库存
@@ -70,7 +72,9 @@ func (service *OrderService) Create(ctx context.Context, userId uint64, dto seri
 			return serializer.ResponseResult{
 				Code: e.ErrorNotEnoughProduct,
 				Msg:  e.GetMsg(e.ErrorNotEnoughProduct),
-				Data: cartProduct.ProductId,
+				Data: map[string]uint64{
+					"productId": cartProduct.ProductId,
+				},
 			}
 		}
 		productList = append(productList, *product)
@@ -93,9 +97,6 @@ func (service *OrderService) Create(ctx context.Context, userId uint64, dto seri
 	err = cartDao.UpdateTotal(&model.Cart{
 		UserId: userId,
 		Total:  0,
-		Model: model.Model{
-			CreatedAt: cart.Model.CreatedAt,
-		},
 	})
 	if err != nil {
 		return serializer.ResponseResult{
@@ -155,6 +156,49 @@ func (service *OrderService) Create(ctx context.Context, userId uint64, dto seri
 				Code: e.ErrorDatabase,
 				Msg:  e.GetMsg(e.ErrorDatabase),
 			}
+		}
+	}
+
+	return serializer.ResponseResult{
+		Code: http.StatusOK,
+		Msg:  e.GetMsg(http.StatusOK),
+	}
+}
+
+func (service *OrderService) Update(ctx context.Context, userId uint64, dto serializer.OrderUpdateDTO) serializer.ResponseResult {
+	orderDao := dao.NewOrderDao(ctx)
+
+	//判断是否存在该订单Id
+	_, exist, err := orderDao.GetByOrderId(userId, dto.OrderId)
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
+		}
+	}
+	if !exist {
+		return serializer.ResponseResult{
+			Code: e.ErrorNotExistProduct,
+			Msg:  e.GetMsg(e.ErrorNotExistProduct),
+		}
+	}
+
+	// 修改
+	status := false
+	if dto.Status == "已完成" {
+		status = true
+	}
+	err = orderDao.Update(&model.Order{
+		Model:          model.Model{Id: dto.OrderId},
+		AddressName:    dto.AddressName,
+		AddressTel:     dto.AddressTel,
+		AddressDetails: dto.AddressDetails,
+		Status:         status,
+	})
+	if err != nil {
+		return serializer.ResponseResult{
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
 		}
 	}
 

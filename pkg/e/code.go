@@ -21,4 +21,6 @@ const (
 	ErrorNotEnoughProduct = 30003
 
 	ErrorNotExistCartProduct = 50001
+
+	ErrorNotExistOrder = 60001
 )

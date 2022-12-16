@@ -177,9 +177,6 @@ func (service *CartService) Delete(ctx context.Context, dto serializer.CartCreat
 	err = cartDao.UpdateTotal(&model.Cart{
 		UserId: id,
 		Total:  cart.Total - dto.Total,
-		Model: model.Model{
-			CreatedAt: cart.Model.CreatedAt,
-		},
 	})
 	if err != nil {
 		return serializer.ResponseResult{

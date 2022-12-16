@@ -68,9 +68,15 @@ func (*productApiImplementation) Delete(c *gin.Context) {
 func (*productApiImplementation) Update(c *gin.Context) {
 	var productService service.ProductService
 	var dto serializer.ProductUpdateDTO
-	_ = c.ShouldBindJSON(&dto)
-	res := productService.Update(c.Request.Context(), dto)
-	c.JSON(http.StatusOK, res)
+	if err := c.ShouldBindJSON(&dto); err == nil {
+		res := productService.Update(c.Request.Context(), dto)
+		c.JSON(http.StatusOK, res)
+	} else {
+		c.JSON(http.StatusBadRequest, serializer.ResponseResult{
+			Code: e.InvalidParams,
+			Msg:  e.GetMsg(e.InvalidParams),
+		})
+	}
 }
 
 func (*productApiImplementation) List(c *gin.Context) {
