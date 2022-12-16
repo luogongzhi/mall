@@ -104,7 +104,7 @@ func (service *ProductService) Update(ctx context.Context, dto serializer.Produc
 		}
 	}
 
-	err = productDao.Update(&model.Product{
+	err = productDao.UpdateProduct(&model.Product{
 		Model:     model.Model{Id: dto.Id},
 		Title:     dto.Title,
 		Info:      dto.Info,

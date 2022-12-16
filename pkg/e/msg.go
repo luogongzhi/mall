@@ -13,14 +13,20 @@ var MsgFlags = map[int]string{
 	ErrorNotCompare:          "账号密码错误",
 	ErrorNotExistUserAddress: "该用户地址不存在",
 
-	ErrorNotExistProduct: "该商品不存在",
-	ErrorProductTotal:    "错误的商品数量",
-
 	ErrorAuthCheckTokenFail:        "Token鉴权失败",
 	ErrorAuthCheckTokenTimeout:     "Token已超时",
 	ErrorAuthToken:                 "Token生成失败",
 	ErrorAuth:                      "Token错误",
 	ErrorAuthInsufficientAuthority: "权限不足",
+
+	ErrorNotExistProduct:  "该商品不存在",
+	ErrorProductTotal:     "错误的商品数量",
+	ErrorNotEnoughProduct: "该商品库存不足",
+
+	ErrorNotExistCartProduct: "购物车中未添加商品",
+
+	ErrorNotExistOrder:  "订单不存在",
+	ErrortOrderFinished: "订单已完成，无法取消",
 }
 
 func GetMsg(code int) string {

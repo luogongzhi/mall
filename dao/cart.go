@@ -24,5 +24,5 @@ func (dao *CartDao) GetByUserId(id uint64) (cart *model.Cart, err error) {
 }
 
 func (dao *CartDao) UpdateTotal(cart *model.Cart) error {
-	return dao.DB.Select("*").Where("user_id = ?", cart.UserId).Updates(&cart).Error
+	return dao.DB.Model(&model.Cart{}).Where("user_id = ?", cart.UserId).Update("total", cart.Total).Error
 }

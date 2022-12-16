@@ -10,12 +10,18 @@ const (
 	ErrorNotCompare          = 10004
 	ErrorNotExistUserAddress = 10005
 
-	ErrorNotExistProduct = 20001
-	ErrorProductTotal    = 20002
+	ErrorAuthCheckTokenFail        = 20001
+	ErrorAuthCheckTokenTimeout     = 20002
+	ErrorAuthToken                 = 20003
+	ErrorAuth                      = 20004
+	ErrorAuthInsufficientAuthority = 20005
 
-	ErrorAuthCheckTokenFail        = 30001
-	ErrorAuthCheckTokenTimeout     = 30002
-	ErrorAuthToken                 = 30003
-	ErrorAuth                      = 30004
-	ErrorAuthInsufficientAuthority = 30005
+	ErrorNotExistProduct  = 30001
+	ErrorProductTotal     = 30002
+	ErrorNotEnoughProduct = 30003
+
+	ErrorNotExistCartProduct = 50001
+
+	ErrorNotExistOrder  = 60001
+	ErrortOrderFinished = 60002
 )
