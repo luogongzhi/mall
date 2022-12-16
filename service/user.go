@@ -14,9 +14,10 @@ import (
 type UserService struct{}
 
 // Register 用户注册
-func (service *UserService) Register(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
+func (*UserService) Register(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
 	cartDao := dao.NewCartDao(ctx)
+
 	// 判断用户名是否存在
 	_, exist, err := userDao.ExistOrNotByUserName(dto.Username)
 	if err != nil {
@@ -33,7 +34,7 @@ func (service *UserService) Register(ctx context.Context, dto serializer.UserLog
 	}
 
 	// 创建用户
-	err = userDao.Create(&model.User{
+	id, err := userDao.Create(&model.User{
 		Username: dto.Username,
 		Password: utils.MD5(dto.Password),
 	})
@@ -45,9 +46,8 @@ func (service *UserService) Register(ctx context.Context, dto serializer.UserLog
 	}
 
 	// 初始化用户购物车
-	user, _, _ := userDao.ExistOrNotByUserName(dto.Username)
 	err = cartDao.Create(&model.Cart{
-		UserId: user.Id,
+		UserId: id,
 		Total:  0,
 	})
 	if err != nil {
@@ -64,8 +64,9 @@ func (service *UserService) Register(ctx context.Context, dto serializer.UserLog
 }
 
 // Login 用户登录
-func (service *UserService) Login(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
+func (*UserService) Login(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
+
 	// 判断用户名是否存在
 	user, exist, err := userDao.ExistOrNotByUserName(dto.Username)
 	if err != nil {
@@ -109,8 +110,9 @@ func (service *UserService) Login(ctx context.Context, dto serializer.UserLoginR
 }
 
 // Detail 根据Id查询用户信息
-func (service *UserService) Detail(ctx context.Context, id uint64) serializer.ResponseResult {
+func (*UserService) Detail(ctx context.Context, id uint64) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
+
 	// 根据id查询用户
 	user, _, _ := userDao.GetById(id)
 	return serializer.ResponseResult{
@@ -123,7 +125,7 @@ func (service *UserService) Detail(ctx context.Context, id uint64) serializer.Re
 }
 
 // Update 修改用户信息
-func (service *UserService) Update(ctx context.Context, dto serializer.UserUpdateDTO, id uint64) serializer.ResponseResult {
+func (*UserService) Update(ctx context.Context, dto serializer.UserUpdateDTO, id uint64) serializer.ResponseResult {
 	userDao := dao.NewUserDao(ctx)
 
 	var gender uint

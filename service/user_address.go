@@ -12,8 +12,9 @@ import (
 type UserAddressService struct{}
 
 // List 根据用户Id查询用户地址信息
-func (service *UserAddressService) List(ctx context.Context, id uint64) serializer.ResponseResult {
+func (*UserAddressService) List(ctx context.Context, id uint64) serializer.ResponseResult {
 	useAddressDao := dao.NewUserAddressDao(ctx)
+
 	userAddress, exist, err := useAddressDao.GetByUserId(id)
 	if err != nil {
 		return serializer.ResponseResult{
@@ -38,7 +39,7 @@ func (service *UserAddressService) List(ctx context.Context, id uint64) serializ
 }
 
 // Create 用户地址信息添加
-func (service *UserAddressService) Create(ctx context.Context, dto serializer.UserAddressCreateDTO, id uint64) serializer.ResponseResult {
+func (*UserAddressService) Create(ctx context.Context, dto serializer.UserAddressCreateDTO, id uint64) serializer.ResponseResult {
 	userAddressDao := dao.NewUserAddressDao(ctx)
 
 	// 创建用户地址信息
@@ -62,7 +63,7 @@ func (service *UserAddressService) Create(ctx context.Context, dto serializer.Us
 }
 
 // Delete 用户地址信息删除
-func (service *UserAddressService) Delete(ctx context.Context, userAddressId uint64, userId uint64) serializer.ResponseResult {
+func (*UserAddressService) Delete(ctx context.Context, userAddressId uint64, userId uint64) serializer.ResponseResult {
 	userAddressDao := dao.NewUserAddressDao(ctx)
 
 	// 删除用户地址信息
@@ -87,7 +88,7 @@ func (service *UserAddressService) Delete(ctx context.Context, userAddressId uin
 }
 
 // Update 修改用户地址信息
-func (service *UserAddressService) Update(ctx context.Context, dto serializer.UserAddressUpdateDTO, id uint64) serializer.ResponseResult {
+func (*UserAddressService) Update(ctx context.Context, dto serializer.UserAddressUpdateDTO, id uint64) serializer.ResponseResult {
 	userAddressDao := dao.NewUserAddressDao(ctx)
 
 	// 根据Id修改用户信息

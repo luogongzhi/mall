@@ -38,7 +38,7 @@ func (*userApiImplementation) Register(c *gin.Context) {
 	}
 }
 
-// Login 用户登陆
+// Login 用户登录
 func (*userApiImplementation) Login(c *gin.Context) {
 	var userService service.UserService
 	var dto serializer.UserLoginRegisterDTO

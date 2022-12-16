@@ -22,6 +22,7 @@ func NewProductApi() IOrderApi {
 	return &orderApiImplementation{}
 }
 
+// Create 创建订单
 func (*orderApiImplementation) Create(c *gin.Context) {
 	var OrderService service.OrderService
 	var dto serializer.OrderCreateDTO
@@ -37,6 +38,7 @@ func (*orderApiImplementation) Create(c *gin.Context) {
 	}
 }
 
+// Update 修改订单
 func (*orderApiImplementation) Update(c *gin.Context) {
 	var OrderService service.OrderService
 	var dto serializer.OrderUpdateDTO
@@ -52,6 +54,7 @@ func (*orderApiImplementation) Update(c *gin.Context) {
 	}
 }
 
+// List 用户订单列
 func (*orderApiImplementation) List(c *gin.Context) {
 	var OrderService service.OrderService
 	claims, _ := utils.ParseToken(c.GetHeader("Authorization"))
@@ -59,6 +62,7 @@ func (*orderApiImplementation) List(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// Delete 取消订单
 func (*orderApiImplementation) Delete(c *gin.Context) {
 	var OrderService service.OrderService
 	var dto serializer.OrderDeleteDTO

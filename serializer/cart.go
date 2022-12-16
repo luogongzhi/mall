@@ -1,8 +1,6 @@
 package serializer
 
-import (
-	"mall/model"
-)
+import "mall/model"
 
 type CartCreateDeleteDTO struct {
 	ProductId uint64 `json:"product_id" binding:"required"`
@@ -16,11 +14,11 @@ type CartVO struct {
 	CartProductVO []CartProductVO `json:"cart_product"`
 }
 
-func NewCartVO(cart *model.Cart, cartProductVOList []CartProductVO) CartVO {
+func NewCartVO(cart *model.Cart, cartProductVOList *[]CartProductVO) CartVO {
 	return CartVO{
 		CartId:        cart.Id,
 		UserId:        cart.UserId,
 		Total:         cart.Total,
-		CartProductVO: cartProductVOList,
+		CartProductVO: *cartProductVOList,
 	}
 }

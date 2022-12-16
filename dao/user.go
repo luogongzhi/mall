@@ -40,6 +40,7 @@ func (dao *UserDao) ExistOrNotByUserName(userName string) (user *model.User, exi
 }
 
 // Create 创建用户
-func (dao *UserDao) Create(user *model.User) error {
-	return dao.DB.Create(&user).Error
+func (dao *UserDao) Create(user *model.User) (id uint64, err error) {
+	err = dao.DB.Create(&user).Error
+	return user.Id, err
 }

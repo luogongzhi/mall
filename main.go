@@ -9,5 +9,5 @@ import (
 func main() {
 	conf.Init()
 	r := route.Router()
-	r.Run()
+	_ = r.Run()
 }

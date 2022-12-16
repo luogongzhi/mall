@@ -11,7 +11,7 @@ import (
 
 type CartService struct{}
 
-func (service *CartService) Detail(ctx context.Context, userId uint64) serializer.ResponseResult {
+func (*CartService) Detail(ctx context.Context, userId uint64) serializer.ResponseResult {
 	cartDao := dao.NewCartDao(ctx)
 	cartProductDao := dao.NewCartProductDao(ctx)
 
@@ -23,7 +23,8 @@ func (service *CartService) Detail(ctx context.Context, userId uint64) serialize
 		}
 	}
 
-	cartProductList, err := cartProductDao.GetList(cart.Id)
+	var cartProductList *[]serializer.CartProductVO
+	cartProductList, err = cartProductDao.GetList(cart.Id)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
@@ -42,12 +43,12 @@ func (service *CartService) Detail(ctx context.Context, userId uint64) serialize
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),
 		Data: map[string]interface{}{
-			"cart": serializer.NewCartVO(cart, *cartProductList),
+			"cart": serializer.NewCartVO(cart, cartProductList),
 		},
 	}
 }
 
-func (service *CartService) Create(ctx context.Context, dto serializer.CartCreateDeleteDTO, id uint64) serializer.ResponseResult {
+func (*CartService) Create(ctx context.Context, dto serializer.CartCreateDeleteDTO, id uint64) serializer.ResponseResult {
 	cartDao := dao.NewCartDao(ctx)
 	cartProductDao := dao.NewCartProductDao(ctx)
 
@@ -117,7 +118,7 @@ func (service *CartService) Create(ctx context.Context, dto serializer.CartCreat
 	}
 }
 
-func (service *CartService) Delete(ctx context.Context, dto serializer.CartCreateDeleteDTO, id uint64) serializer.ResponseResult {
+func (*CartService) Delete(ctx context.Context, dto serializer.CartCreateDeleteDTO, id uint64) serializer.ResponseResult {
 	cartDao := dao.NewCartDao(ctx)
 	cartProductDao := dao.NewCartProductDao(ctx)
 

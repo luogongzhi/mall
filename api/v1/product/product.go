@@ -23,9 +23,10 @@ func NewProductApi() IProductApi {
 	return &productApiImplementation{}
 }
 
+// Detail 查询指定商品
 func (*productApiImplementation) Detail(c *gin.Context) {
 	var productService service.ProductService
-	if value, ok := c.GetQuery("id"); ok == true {
+	if value, ok := c.GetQuery("id"); ok {
 		id, _ := strconv.ParseInt(value, 10, 64)
 		res := productService.Detail(c.Request.Context(), uint64(id))
 		c.JSON(http.StatusOK, res)
@@ -37,6 +38,7 @@ func (*productApiImplementation) Detail(c *gin.Context) {
 	}
 }
 
+// Create 创建商品
 func (*productApiImplementation) Create(c *gin.Context) {
 	var productService service.ProductService
 	var dto serializer.ProductCreateDTO
@@ -51,6 +53,7 @@ func (*productApiImplementation) Create(c *gin.Context) {
 	}
 }
 
+// Delete 删除商品
 func (*productApiImplementation) Delete(c *gin.Context) {
 	var productService service.ProductService
 	var dto serializer.ProductDeleteDTO
@@ -65,6 +68,7 @@ func (*productApiImplementation) Delete(c *gin.Context) {
 	}
 }
 
+// Update 修改商品信息
 func (*productApiImplementation) Update(c *gin.Context) {
 	var productService service.ProductService
 	var dto serializer.ProductUpdateDTO
@@ -79,6 +83,7 @@ func (*productApiImplementation) Update(c *gin.Context) {
 	}
 }
 
+// List 分页展示商品列
 func (*productApiImplementation) List(c *gin.Context) {
 	var productService service.ProductService
 	var dto serializer.PaginateDTO

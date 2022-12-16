@@ -12,8 +12,7 @@ import (
 
 type OrderService struct{}
 
-// Create 创建订单
-func (service *OrderService) Create(ctx context.Context, userId uint64, dto serializer.OrderCreateDTO) serializer.ResponseResult {
+func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.OrderCreateDTO) serializer.ResponseResult {
 	cartDao := dao.NewCartDao(ctx)
 	cartProductDao := dao.NewCartProductDao(ctx)
 	productDao := dao.NewProductDao(ctx)
@@ -165,7 +164,7 @@ func (service *OrderService) Create(ctx context.Context, userId uint64, dto seri
 	}
 }
 
-func (service *OrderService) Update(ctx context.Context, userId uint64, dto serializer.OrderUpdateDTO) serializer.ResponseResult {
+func (*OrderService) Update(ctx context.Context, userId uint64, dto serializer.OrderUpdateDTO) serializer.ResponseResult {
 	orderDao := dao.NewOrderDao(ctx)
 
 	//判断是否存在该订单Id
@@ -247,7 +246,7 @@ func (service *OrderService) List(ctx context.Context, userId uint64) serializer
 			}
 			orderProductVOList = append(orderProductVOList, orderProductVO)
 		}
-		orderVO := serializer.NewOrderVO(&order, orderProductVOList)
+		orderVO := serializer.NewOrderVO(&order, &orderProductVOList)
 		orderVOList = append(orderVOList, &orderVO)
 	}
 
@@ -305,10 +304,16 @@ func (service *OrderService) Delete(ctx context.Context, userId uint64, orderId 
 		}
 	}
 
-	//遍历 order_product list，根据product_id查询对应商品
+	// 遍历 order_product list，根据product_id查询对应商品
 	for _, orderProduct := range *orderProductList {
 		var product *model.Product
 		product, exist, err = productDao.GetById(orderProduct.ProductId)
+		if err != nil {
+			return serializer.ResponseResult{
+				Code: e.ErrorDatabase,
+				Msg:  e.GetMsg(e.ErrorDatabase),
+			}
+		}
 		//如果商品存在，则将商品total加上
 		if exist {
 			err = productDao.UpdateProductTotal(&model.Product{

@@ -21,6 +21,7 @@ func NewCartApi() ICartApi {
 	return &cartApiImplementation{}
 }
 
+// Detail 获取用户购物车
 func (*cartApiImplementation) Detail(c *gin.Context) {
 	var cartService service.CartService
 	claims, _ := utils.ParseToken(c.GetHeader("Authorization"))
@@ -28,7 +29,8 @@ func (*cartApiImplementation) Detail(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func (i *cartApiImplementation) Create(c *gin.Context) {
+// Create 购物车商品添加
+func (*cartApiImplementation) Create(c *gin.Context) {
 	var cartService service.CartService
 	var dto serializer.CartCreateDeleteDTO
 	if err := c.ShouldBindJSON(&dto); err == nil {
@@ -43,7 +45,8 @@ func (i *cartApiImplementation) Create(c *gin.Context) {
 	}
 }
 
-func (i *cartApiImplementation) Delete(c *gin.Context) {
+// Delete 购物车商品删除
+func (*cartApiImplementation) Delete(c *gin.Context) {
 	var cartService service.CartService
 	var dto serializer.CartCreateDeleteDTO
 	if err := c.ShouldBindJSON(&dto); err == nil {

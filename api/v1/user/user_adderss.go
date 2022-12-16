@@ -18,7 +18,6 @@ type IUserAddressApi interface {
 
 type userAddressApiImplementation struct{}
 
-// NewUserAddressApi 返回接口实现类（赋值给接口）
 func NewUserAddressApi() IUserAddressApi {
 	return &userAddressApiImplementation{}
 }

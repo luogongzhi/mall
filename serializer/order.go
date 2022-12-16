@@ -33,7 +33,7 @@ type OrderVO struct {
 	Status             string           `json:"status"`
 }
 
-func NewOrderVO(order *model.Order, orderProductVOList []OrderProductVO) OrderVO {
+func NewOrderVO(order *model.Order, orderProductVOList *[]OrderProductVO) OrderVO {
 	var status string
 	if order.Status {
 		status = "已完成"
@@ -46,7 +46,7 @@ func NewOrderVO(order *model.Order, orderProductVOList []OrderProductVO) OrderVO
 		AddressName:        order.AddressName,
 		AddressTel:         order.AddressTel,
 		AddressDetails:     order.AddressDetails,
-		OrderProductVOList: orderProductVOList,
+		OrderProductVOList: *orderProductVOList,
 		ProductAmount:      order.ProductAmount,
 		FreightAmount:      order.FreightAmount,
 		TotalAmount:        order.TotalAmount,
