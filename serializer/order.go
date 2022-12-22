@@ -38,7 +38,7 @@ func NewOrderVO(order *model.Order, orderProductVOList *[]OrderProductVO) OrderV
 	if order.Status {
 		status = "已完成"
 	} else {
-		status = "为完成"
+		status = "未完成"
 	}
 	return OrderVO{
 		OrderId:            order.Id,

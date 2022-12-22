@@ -12,85 +12,42 @@ import (
 
 type OrderService struct{}
 
-func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.OrderCreateDTO) serializer.ResponseResult {
-	cartDao := dao.NewCartDao(ctx)
-	cartProductDao := dao.NewCartProductDao(ctx)
-	productDao := dao.NewProductDao(ctx)
-	orderDao := dao.NewOrderDao(ctx)
-	orderProductDao := dao.NewOrderProductDao(ctx)
-
-	// 1.清空购物车
+// cleanCart 清空购物车
+func cleanCart(userId uint64, cartDao *dao.CartDao, cartProductDao *dao.CartProductDao, productDao *dao.ProductDao) (code int, data map[string]uint64, cartProductList *[]serializer.CartProductVO, productList []model.Product) {
 	// 根据用户查询该用户购物车
 	cart, err := cartDao.GetByUserId(userId)
 	if err != nil {
-		return serializer.ResponseResult{
-			Code: e.ErrorDatabase,
-			Msg:  e.GetMsg(e.ErrorDatabase),
-		}
+		return e.ErrorDatabase, nil, nil, nil
 	}
 	// 判断购物车商品是否为空
 	if cart.Total == 0 {
-		return serializer.ResponseResult{
-			Code: e.ErrorNotExistCartProduct,
-			Msg:  e.GetMsg(e.ErrorNotExistCartProduct),
-		}
+		return e.ErrorNotExistCartProduct, nil, nil, nil
 	}
 	// 根据用户购物车Id查询购物车中的商品
-	var cartProductList *[]serializer.CartProductVO
 	cartProductList, err = cartProductDao.GetList(cart.Id)
 	if err != nil {
-		return serializer.ResponseResult{
-			Code: e.ErrorDatabase,
-			Msg:  e.GetMsg(e.ErrorDatabase),
-		}
+		return e.ErrorDatabase, nil, nil, nil
 	}
 	// 检查商品库存
-	var productList []model.Product
 	for _, cartProduct := range *cartProductList {
-		var exist bool
-		var product *model.Product
-		product, exist, err = productDao.GetById(cartProduct.ProductId)
+		product, exist, err := productDao.GetById(cartProduct.ProductId)
 		if err != nil {
-			return serializer.ResponseResult{
-				Code: e.ErrorDatabase,
-				Msg:  e.GetMsg(e.ErrorDatabase),
-			}
+			return e.ErrorDatabase, nil, nil, nil
 		}
 		// 判断商品是否存在
 		if !exist {
-			return serializer.ResponseResult{
-				Code: e.ErrorNotExistProduct,
-				Msg:  e.GetMsg(e.ErrorNotExistProduct),
-				Data: map[string]uint64{
-					"productId": cartProduct.ProductId,
-				},
-			}
+			return e.ErrorNotExistProduct, map[string]uint64{"productId": cartProduct.ProductId}, nil, nil
 		}
 		// 如果购物车中的商品件数 > 该商品库存
 		if cartProduct.Total > product.Total {
-			return serializer.ResponseResult{
-				Code: e.ErrorNotEnoughProduct,
-				Msg:  e.GetMsg(e.ErrorNotEnoughProduct),
-				Data: map[string]uint64{
-					"productId": cartProduct.ProductId,
-				},
-			}
+			return e.ErrorNotEnoughProduct, map[string]uint64{"productId": cartProduct.ProductId}, nil, nil
 		}
 		productList = append(productList, *product)
 	}
 	// 根据用户购物车Id删除购物车中的商品
 	err = cartProductDao.DeleteByCartId(cart.Id)
 	if err != nil {
-		return serializer.ResponseResult{
-			Code: e.ErrorDatabase,
-			Msg:  e.GetMsg(e.ErrorDatabase),
-		}
-	}
-	if err != nil {
-		return serializer.ResponseResult{
-			Code: e.ErrorDatabase,
-			Msg:  e.GetMsg(e.ErrorDatabase),
-		}
+		return e.ErrorDatabase, nil, nil, nil
 	}
 	// 修改用户购物车商品总数
 	err = cartDao.UpdateTotal(&model.Cart{
@@ -98,35 +55,31 @@ func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.O
 		Total:  0,
 	})
 	if err != nil {
-		return serializer.ResponseResult{
-			Code: e.ErrorDatabase,
-			Msg:  e.GetMsg(e.ErrorDatabase),
-		}
+		return e.ErrorDatabase, nil, nil, nil
 	}
+	return 0, nil, cartProductList, productList
+}
 
-	// 2.修改商品库存
-	// 商品总金额
-	var productAmount float64
+// updateProductTotal 修改商品库存
+func updateProductTotal(productDao *dao.ProductDao, cartProductList *[]serializer.CartProductVO, productList []model.Product) (code int, productAmount float64) {
 	for i, cartProduct := range *cartProductList {
-		err = productDao.UpdateProductTotal(&model.Product{
+		err := productDao.UpdateProductTotal(&model.Product{
 			Model: model.Model{Id: cartProduct.ProductId},
 			Total: productList[i].Total - cartProduct.Total,
 		})
 		if err != nil {
-			return serializer.ResponseResult{
-				Code: e.ErrorDatabase,
-				Msg:  e.GetMsg(e.ErrorDatabase),
-			}
+			return e.ErrorDatabase, 0
 		}
-		num := decimal.NewFromFloat(cartProduct.Price).Mul(decimal.NewFromFloat(float64(cartProduct.Total)))
-		f, _ := num.Float64()
+		f, _ := decimal.NewFromFloat(cartProduct.Price).Mul(decimal.NewFromFloat(float64(cartProduct.Total))).Float64()
 		productAmount += f
 	}
+	return 0, productAmount
+}
 
-	// 3.创建订单
+// createOrder 创建订单
+func createOrder(userId uint64, productAmount float64, dto *serializer.OrderCreateDTO, cartProductList *[]serializer.CartProductVO, orderDao *dao.OrderDao, orderProductDao *dao.OrderProductDao) (code int) {
 	// 创建 order
-	var orderId uint64
-	orderId, err = orderDao.Create(&model.Order{
+	orderId, err := orderDao.Create(&model.Order{
 		UserId:         userId,
 		AddressName:    dto.AddressName,
 		AddressTel:     dto.AddressTel,
@@ -137,12 +90,8 @@ func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.O
 		Status:         false,
 	})
 	if err != nil {
-		return serializer.ResponseResult{
-			Code: e.ErrorDatabase,
-			Msg:  e.GetMsg(e.ErrorDatabase),
-		}
+		return e.ErrorDatabase
 	}
-
 	// 创建 order_product
 	for _, cartProduct := range *cartProductList {
 		err = orderProductDao.Create(&model.OrderProduct{
@@ -151,10 +100,42 @@ func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.O
 			Total:     cartProduct.Total,
 		})
 		if err != nil {
-			return serializer.ResponseResult{
-				Code: e.ErrorDatabase,
-				Msg:  e.GetMsg(e.ErrorDatabase),
-			}
+			return e.ErrorDatabase
+		}
+	}
+	return 0
+}
+
+func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.OrderCreateDTO) serializer.ResponseResult {
+	cartDao := dao.NewCartDao(ctx)
+	cartProductDao := dao.NewCartProductDao(ctx)
+	productDao := dao.NewProductDao(ctx)
+	orderDao := dao.NewOrderDao(ctx)
+	orderProductDao := dao.NewOrderProductDao(ctx)
+
+	// 1. 清空购物车
+	code, data, cartProductList, productList := cleanCart(userId, cartDao, cartProductDao, productDao)
+	if code != 0 {
+		return serializer.ResponseResult{
+			Code: code,
+			Msg:  e.GetMsg(code),
+			Data: data,
+		}
+	}
+	// 2.修改商品库存
+	code, productAmount := updateProductTotal(productDao, cartProductList, productList)
+	if code != 0 {
+		return serializer.ResponseResult{
+			Code: code,
+			Msg:  e.GetMsg(code),
+		}
+	}
+	// 3.创建订单
+	code = createOrder(userId, productAmount, &dto, cartProductList, orderDao, orderProductDao)
+	if code != 0 {
+		return serializer.ResponseResult{
+			Code: code,
+			Msg:  e.GetMsg(code),
 		}
 	}
 
@@ -207,7 +188,7 @@ func (*OrderService) Update(ctx context.Context, userId uint64, dto serializer.O
 	}
 }
 
-func (service *OrderService) List(ctx context.Context, userId uint64) serializer.ResponseResult {
+func (*OrderService) List(ctx context.Context, userId uint64) serializer.ResponseResult {
 	orderDao := dao.NewOrderDao(ctx)
 	orderProductDao := dao.NewOrderProductDao(ctx)
 
@@ -257,7 +238,7 @@ func (service *OrderService) List(ctx context.Context, userId uint64) serializer
 	}
 }
 
-func (service *OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) serializer.ResponseResult {
+func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) serializer.ResponseResult {
 	orderDao := dao.NewOrderDao(ctx)
 	orderProductDao := dao.NewOrderProductDao(ctx)
 	productDao := dao.NewProductDao(ctx)
