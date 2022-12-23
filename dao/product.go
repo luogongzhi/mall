@@ -14,6 +14,10 @@ func NewProductDao(ctx context.Context) *ProductDao {
 	return &ProductDao{NewDBClient(ctx)}
 }
 
+func NewProductTransactionDao(ctx context.Context) *ProductDao {
+	return &ProductDao{NewTransactionDBClient(ctx)}
+}
+
 func (dao *ProductDao) GetById(id uint64) (product *model.Product, exist bool, err error) {
 	var count int64
 	err = dao.DB.Model(&model.Product{}).Where("id = ?", id).Find(&product).Count(&count).Error

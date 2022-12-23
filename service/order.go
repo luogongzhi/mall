@@ -6,6 +6,7 @@ import (
 	"mall/dao"
 	"mall/model"
 	"mall/pkg/e"
+	"mall/pkg/utils"
 	"mall/serializer"
 	"net/http"
 )
@@ -107,15 +108,16 @@ func createOrder(userId uint64, productAmount float64, dto *serializer.OrderCrea
 }
 
 func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.OrderCreateDTO) serializer.ResponseResult {
-	cartDao := dao.NewCartDao(ctx)
-	cartProductDao := dao.NewCartProductDao(ctx)
-	productDao := dao.NewProductDao(ctx)
-	orderDao := dao.NewOrderDao(ctx)
-	orderProductDao := dao.NewOrderProductDao(ctx)
+	cartDao := dao.NewCartTransactionDao(ctx)
+	cartProductDao := dao.NewCartProductTransactionDao(ctx)
+	productDao := dao.NewProductTransactionDao(ctx)
+	orderDao := dao.NewOrderTransactionDao(ctx)
+	orderProductDao := dao.NewOrderProductTransactionDao(ctx)
 
 	// 1. 清空购物车
 	code, data, cartProductList, productList := cleanCart(userId, cartDao, cartProductDao, productDao)
 	if code != 0 {
+		utils.Rollback(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
 		return serializer.ResponseResult{
 			Code: code,
 			Msg:  e.GetMsg(code),
@@ -125,6 +127,7 @@ func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.O
 	// 2.修改商品库存
 	code, productAmount := updateProductTotal(productDao, cartProductList, productList)
 	if code != 0 {
+		utils.Rollback(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
 		return serializer.ResponseResult{
 			Code: code,
 			Msg:  e.GetMsg(code),
@@ -133,12 +136,14 @@ func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.O
 	// 3.创建订单
 	code = createOrder(userId, productAmount, &dto, cartProductList, orderDao, orderProductDao)
 	if code != 0 {
+		utils.Rollback(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
 		return serializer.ResponseResult{
 			Code: code,
 			Msg:  e.GetMsg(code),
 		}
 	}
 
+	utils.Commit(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),
@@ -279,6 +284,7 @@ func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) 
 	// 根据订单Id删除order_product
 	err = orderProductDao.DeleteByOrderId(orderId)
 	if err != nil {
+		utils.Rollback(productDao, orderDao, orderProductDao)
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
 			Msg:  e.GetMsg(e.ErrorDatabase),
@@ -290,6 +296,7 @@ func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) 
 		var product *model.Product
 		product, exist, err = productDao.GetById(orderProduct.ProductId)
 		if err != nil {
+			utils.Rollback(productDao, orderDao, orderProductDao)
 			return serializer.ResponseResult{
 				Code: e.ErrorDatabase,
 				Msg:  e.GetMsg(e.ErrorDatabase),
@@ -302,6 +309,7 @@ func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) 
 				Total: product.Total + orderProduct.Total,
 			})
 			if err != nil {
+				utils.Rollback(productDao, orderDao, orderProductDao)
 				return serializer.ResponseResult{
 					Code: e.ErrorDatabase,
 					Msg:  e.GetMsg(e.ErrorDatabase),
@@ -313,12 +321,14 @@ func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) 
 	// 删除order
 	err = orderDao.DeleteById(orderId)
 	if err != nil {
+		utils.Rollback(productDao, orderDao, orderProductDao)
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
 			Msg:  e.GetMsg(e.ErrorDatabase),
 		}
 	}
 
+	utils.Commit(productDao, orderDao, orderProductDao)
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),

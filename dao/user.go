@@ -14,6 +14,10 @@ func NewUserDao(ctx context.Context) *UserDao {
 	return &UserDao{NewDBClient(ctx)}
 }
 
+func NewUserTransactionDao(ctx context.Context) *UserDao {
+	return &UserDao{NewTransactionDBClient(ctx)}
+}
+
 // GetById 根据id获取用户
 func (dao *UserDao) GetById(id uint64) (user *model.User, exist bool, err error) {
 	var count int64

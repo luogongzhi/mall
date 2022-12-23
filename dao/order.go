@@ -14,6 +14,10 @@ func NewOrderDao(ctx context.Context) *OrderDao {
 	return &OrderDao{NewDBClient(ctx)}
 }
 
+func NewOrderTransactionDao(ctx context.Context) *OrderDao {
+	return &OrderDao{NewTransactionDBClient(ctx)}
+}
+
 func (dao *OrderDao) Create(order *model.Order) (id uint64, err error) {
 	err = dao.DB.Model(&model.Order{}).Create(&order).Error
 	return order.Model.Id, err

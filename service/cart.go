@@ -5,6 +5,7 @@ import (
 	"mall/dao"
 	"mall/model"
 	"mall/pkg/e"
+	"mall/pkg/utils"
 	"mall/serializer"
 	"net/http"
 )
@@ -49,8 +50,8 @@ func (*CartService) Detail(ctx context.Context, userId uint64) serializer.Respon
 }
 
 func (*CartService) Create(ctx context.Context, dto serializer.CartCreateDeleteDTO, id uint64) serializer.ResponseResult {
-	cartDao := dao.NewCartDao(ctx)
-	cartProductDao := dao.NewCartProductDao(ctx)
+	cartDao := dao.NewCartTransactionDao(ctx)
+	cartProductDao := dao.NewCartProductTransactionDao(ctx)
 
 	// 根据用户查询该用户购物车
 	cart, err := cartDao.GetByUserId(id)
@@ -106,12 +107,14 @@ func (*CartService) Create(ctx context.Context, dto serializer.CartCreateDeleteD
 		Total:  cart.Total + dto.Total,
 	})
 	if err != nil {
+		utils.Rollback(cartDao, cartProductDao)
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
 			Msg:  e.GetMsg(e.ErrorDatabase),
 		}
 	}
 
+	utils.Commit(cartDao, cartProductDao)
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),
@@ -119,8 +122,8 @@ func (*CartService) Create(ctx context.Context, dto serializer.CartCreateDeleteD
 }
 
 func (*CartService) Delete(ctx context.Context, dto serializer.CartCreateDeleteDTO, id uint64) serializer.ResponseResult {
-	cartDao := dao.NewCartDao(ctx)
-	cartProductDao := dao.NewCartProductDao(ctx)
+	cartDao := dao.NewCartTransactionDao(ctx)
+	cartProductDao := dao.NewCartProductTransactionDao(ctx)
 
 	// 根据用户查询该用户购物车
 	cart, err := cartDao.GetByUserId(id)
@@ -180,12 +183,14 @@ func (*CartService) Delete(ctx context.Context, dto serializer.CartCreateDeleteD
 		Total:  cart.Total - dto.Total,
 	})
 	if err != nil {
+		utils.Rollback(cartDao, cartProductDao)
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
 			Msg:  e.GetMsg(e.ErrorDatabase),
 		}
 	}
 
+	utils.Commit(cartDao, cartProductDao)
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),

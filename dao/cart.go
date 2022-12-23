@@ -14,6 +14,10 @@ func NewCartDao(ctx context.Context) *CartDao {
 	return &CartDao{NewDBClient(ctx)}
 }
 
+func NewCartTransactionDao(ctx context.Context) *CartDao {
+	return &CartDao{NewTransactionDBClient(ctx)}
+}
+
 func (dao *CartDao) Create(product *model.Cart) error {
 	return dao.DB.Create(&product).Error
 }

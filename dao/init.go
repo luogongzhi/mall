@@ -36,3 +36,8 @@ func NewDBClient(ctx context.Context) *gorm.DB {
 	db := _db
 	return db.WithContext(ctx)
 }
+
+func NewTransactionDBClient(ctx context.Context) *gorm.DB {
+	db := _db.Begin()
+	return db.WithContext(ctx)
+}
