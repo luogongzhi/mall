@@ -9,76 +9,98 @@ import (
 	"mall/pkg/utils"
 	"mall/serializer"
 	"net/http"
+	"sync"
 )
 
 type OrderService struct{}
 
+// putResponseResultChan 将返回结果放到通道
+func putResponseResultChan(code int, data map[string]uint64, responseResultChan *chan serializer.ResponseResult) {
+	result := serializer.ResponseResult{
+		Code: code,
+		Msg:  e.GetMsg(code),
+		Data: data,
+	}
+	*responseResultChan <- result
+}
+
 // cleanCart 清空购物车
-func cleanCart(userId uint64, cartDao *dao.CartDao, cartProductDao *dao.CartProductDao, productDao *dao.ProductDao) (code int, data map[string]uint64, cartProductList *[]serializer.CartProductVO, productList []model.Product) {
-	// 根据用户查询该用户购物车
-	cart, err := cartDao.GetByUserId(userId)
-	if err != nil {
-		return e.ErrorDatabase, nil, nil, nil
-	}
-	// 判断购物车商品是否为空
-	if cart.Total == 0 {
-		return e.ErrorNotExistCartProduct, nil, nil, nil
-	}
-	// 根据用户购物车Id查询购物车中的商品
-	cartProductList, err = cartProductDao.GetList(cart.Id)
-	if err != nil {
-		return e.ErrorDatabase, nil, nil, nil
-	}
+func cleanCart(wg *sync.WaitGroup, responseResultChan *chan serializer.ResponseResult, productListChan *chan []model.Product, userId uint64, cartId uint64, cartProductList *[]serializer.CartProductVO, cartDao *dao.CartDao, cartProductDao *dao.CartProductDao, productDao *dao.ProductDao) {
+	defer wg.Done()
+
 	// 检查商品库存
+	var productList []model.Product
 	for _, cartProduct := range *cartProductList {
 		product, exist, err := productDao.GetById(cartProduct.ProductId)
 		if err != nil {
-			return e.ErrorDatabase, nil, nil, nil
+			putResponseResultChan(e.ErrorDatabase, nil, responseResultChan)
+			close(*productListChan)
+			return
 		}
 		// 判断商品是否存在
 		if !exist {
-			return e.ErrorNotExistProduct, map[string]uint64{"productId": cartProduct.ProductId}, nil, nil
+			putResponseResultChan(e.ErrorNotExistProduct, map[string]uint64{"productId": cartProduct.ProductId}, responseResultChan)
+			close(*productListChan)
+			return
 		}
 		// 如果购物车中的商品件数 > 该商品库存
 		if cartProduct.Total > product.Total {
-			return e.ErrorNotEnoughProduct, map[string]uint64{"productId": cartProduct.ProductId}, nil, nil
+			putResponseResultChan(e.ErrorNotEnoughProduct, map[string]uint64{"productId": cartProduct.ProductId}, responseResultChan)
+			close(*productListChan)
+			return
 		}
 		productList = append(productList, *product)
 	}
+	*productListChan <- productList
+
 	// 根据用户购物车Id删除购物车中的商品
-	err = cartProductDao.DeleteByCartId(cart.Id)
-	if err != nil {
-		return e.ErrorDatabase, nil, nil, nil
+	if err := cartProductDao.DeleteByCartId(cartId); err != nil {
+		putResponseResultChan(e.ErrorDatabase, nil, responseResultChan)
+		return
 	}
+
 	// 修改用户购物车商品总数
-	err = cartDao.UpdateTotal(&model.Cart{
+	err := cartDao.UpdateTotal(&model.Cart{
 		UserId: userId,
 		Total:  0,
 	})
 	if err != nil {
-		return e.ErrorDatabase, nil, nil, nil
+		putResponseResultChan(e.ErrorDatabase, nil, responseResultChan)
+		return
 	}
-	return 0, nil, cartProductList, productList
 }
 
 // updateProductTotal 修改商品库存
-func updateProductTotal(productDao *dao.ProductDao, cartProductList *[]serializer.CartProductVO, productList []model.Product) (code int, productAmount float64) {
-	for i, cartProduct := range *cartProductList {
-		err := productDao.UpdateProductTotal(&model.Product{
-			Model: model.Model{Id: cartProduct.ProductId},
-			Total: productList[i].Total - cartProduct.Total,
-		})
-		if err != nil {
-			return e.ErrorDatabase, 0
+func updateProductTotal(wg *sync.WaitGroup, responseResultChan *chan serializer.ResponseResult, productListChan *chan []model.Product, productDao *dao.ProductDao, cartProductList *[]serializer.CartProductVO) {
+	defer wg.Done()
+
+	// 如果chan已关闭就返回
+	if productList, ok := <-*productListChan; !ok {
+		return
+	} else {
+		for i, cartProduct := range *cartProductList {
+			err := productDao.UpdateProductTotal(&model.Product{
+				Model: model.Model{Id: cartProduct.ProductId},
+				Total: productList[i].Total - cartProduct.Total,
+			})
+			if err != nil {
+				putResponseResultChan(e.ErrorDatabase, nil, responseResultChan)
+				return
+			}
 		}
-		f, _ := decimal.NewFromFloat(cartProduct.Price).Mul(decimal.NewFromFloat(float64(cartProduct.Total))).Float64()
-		productAmount += f
 	}
-	return 0, productAmount
 }
 
 // createOrder 创建订单
-func createOrder(userId uint64, productAmount float64, dto *serializer.OrderCreateDTO, cartProductList *[]serializer.CartProductVO, orderDao *dao.OrderDao, orderProductDao *dao.OrderProductDao) (code int) {
+func createOrder(wg *sync.WaitGroup, responseResultChan *chan serializer.ResponseResult, cartProductList *[]serializer.CartProductVO, userId uint64, dto *serializer.OrderCreateDTO, orderDao *dao.OrderDao, orderProductDao *dao.OrderProductDao) {
+	defer wg.Done()
+
+	var productAmount float64
+	for _, cartProduct := range *cartProductList {
+		f, _ := decimal.NewFromFloat(cartProduct.Price).Mul(decimal.NewFromFloat(float64(cartProduct.Total))).Float64()
+		productAmount += f
+	}
+
 	// 创建 order
 	orderId, err := orderDao.Create(&model.Order{
 		UserId:         userId,
@@ -91,8 +113,10 @@ func createOrder(userId uint64, productAmount float64, dto *serializer.OrderCrea
 		Status:         false,
 	})
 	if err != nil {
-		return e.ErrorDatabase
+		putResponseResultChan(e.ErrorDatabase, nil, responseResultChan)
+		return
 	}
+
 	// 创建 order_product
 	for _, cartProduct := range *cartProductList {
 		err = orderProductDao.Create(&model.OrderProduct{
@@ -101,49 +125,65 @@ func createOrder(userId uint64, productAmount float64, dto *serializer.OrderCrea
 			Total:     cartProduct.Total,
 		})
 		if err != nil {
-			return e.ErrorDatabase
+			putResponseResultChan(e.ErrorDatabase, nil, responseResultChan)
+			return
 		}
 	}
-	return 0
 }
 
 func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.OrderCreateDTO) serializer.ResponseResult {
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	responseResultChan := make(chan serializer.ResponseResult, 3)
+	productListChan := make(chan []model.Product)
+
 	cartDao := dao.NewCartTransactionDao(ctx)
 	cartProductDao := dao.NewCartProductTransactionDao(ctx)
 	productDao := dao.NewProductTransactionDao(ctx)
 	orderDao := dao.NewOrderTransactionDao(ctx)
 	orderProductDao := dao.NewOrderProductTransactionDao(ctx)
 
-	// 1. 清空购物车
-	code, data, cartProductList, productList := cleanCart(userId, cartDao, cartProductDao, productDao)
-	if code != 0 {
-		utils.Rollback(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
+	// 根据用户查询该用户购物车
+	cart, err := cartDao.GetByUserId(userId)
+	if err != nil {
 		return serializer.ResponseResult{
-			Code: code,
-			Msg:  e.GetMsg(code),
-			Data: data,
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
 		}
 	}
-	// 2.修改商品库存
-	code, productAmount := updateProductTotal(productDao, cartProductList, productList)
-	if code != 0 {
-		utils.Rollback(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
+	// 判断购物车商品是否为空
+	if cart.Total == 0 {
 		return serializer.ResponseResult{
-			Code: code,
-			Msg:  e.GetMsg(code),
+			Code: e.ErrorNotExistCartProduct,
+			Msg:  e.GetMsg(e.ErrorNotExistCartProduct),
 		}
 	}
-	// 3.创建订单
-	code = createOrder(userId, productAmount, &dto, cartProductList, orderDao, orderProductDao)
-	if code != 0 {
-		utils.Rollback(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
+	// 根据用户购物车Id查询购物车中的商品
+	cartProductList, err := cartProductDao.GetList(cart.Id)
+	if err != nil {
 		return serializer.ResponseResult{
-			Code: code,
-			Msg:  e.GetMsg(code),
+			Code: e.ErrorDatabase,
+			Msg:  e.GetMsg(e.ErrorDatabase),
 		}
 	}
 
+	// 1. 清空购物车
+	go cleanCart(&wg, &responseResultChan, &productListChan, userId, cart.Id, cartProductList, cartDao, cartProductDao, productDao)
+	// 2. 修改商品库存
+	go updateProductTotal(&wg, &responseResultChan, &productListChan, productDao, cartProductList)
+	// 3.创建订单
+	go createOrder(&wg, &responseResultChan, cartProductList, userId, &dto, orderDao, orderProductDao)
+
+	wg.Wait()
+	close(responseResultChan)
+	// 如果从chan拿到结果返回就代表有异常，回滚，返回
+	if responseResult, ok := <-responseResultChan; ok {
+		utils.Rollback(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
+		return responseResult
+	}
 	utils.Commit(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
+
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),
