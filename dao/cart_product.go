@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"gorm.io/gorm"
 	"mall/model"
 	"mall/serializer"
@@ -11,12 +10,8 @@ type CartProductDao struct {
 	*gorm.DB
 }
 
-func NewCartProductDao(ctx context.Context) *CartProductDao {
-	return &CartProductDao{NewDBClient(ctx)}
-}
-
-func NewCartProductTransactionDao(ctx context.Context) *CartProductDao {
-	return &CartProductDao{NewTransactionDBClient(ctx)}
+func NewCartProductDao(db *gorm.DB) *CartProductDao {
+	return &CartProductDao{db}
 }
 
 func (dao *CartProductDao) Create(cartProduct *model.CartProduct) error {

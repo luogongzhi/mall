@@ -29,6 +29,12 @@ func Database(dsn string) {
 	if err != nil {
 		fmt.Println("数据库连接失败")
 	}
+
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxIdleConns(20)                   // 设置空闲连接池中连接的最大数量
+	sqlDB.SetMaxOpenConns(100)                  // 设置打开数据库连接的最大数量
+	sqlDB.SetConnMaxLifetime(time.Second * 300) // 设置连接可复用的最大时间
+
 	_db = db
 }
 

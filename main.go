@@ -2,7 +2,6 @@ package main
 
 import (
 	"mall/conf"
-	_ "mall/dao"
 	"mall/route"
 )
 

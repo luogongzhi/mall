@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"gorm.io/gorm"
 	"mall/model"
 )
@@ -10,12 +9,8 @@ type ProductDao struct {
 	*gorm.DB
 }
 
-func NewProductDao(ctx context.Context) *ProductDao {
-	return &ProductDao{NewDBClient(ctx)}
-}
-
-func NewProductTransactionDao(ctx context.Context) *ProductDao {
-	return &ProductDao{NewTransactionDBClient(ctx)}
+func NewProductDao(db *gorm.DB) *ProductDao {
+	return &ProductDao{db}
 }
 
 func (dao *ProductDao) GetById(id uint64) (product *model.Product, exist bool, err error) {

@@ -13,9 +13,10 @@ type UserAddressService struct{}
 
 // List 根据用户Id查询用户地址信息
 func (*UserAddressService) List(ctx context.Context, id uint64) serializer.ResponseResult {
-	useAddressDao := dao.NewUserAddressDao(ctx)
+	db := dao.NewDBClient(ctx)
+	userAddressDao := dao.NewUserAddressDao(db)
 
-	userAddress, exist, err := useAddressDao.GetByUserId(id)
+	userAddress, exist, err := userAddressDao.GetByUserId(id)
 	if err != nil {
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
@@ -40,7 +41,8 @@ func (*UserAddressService) List(ctx context.Context, id uint64) serializer.Respo
 
 // Create 用户地址信息添加
 func (*UserAddressService) Create(ctx context.Context, dto serializer.UserAddressCreateDTO, id uint64) serializer.ResponseResult {
-	userAddressDao := dao.NewUserAddressDao(ctx)
+	db := dao.NewDBClient(ctx)
+	userAddressDao := dao.NewUserAddressDao(db)
 
 	// 创建用户地址信息
 	err := userAddressDao.Create(&model.UserAddress{
@@ -64,7 +66,8 @@ func (*UserAddressService) Create(ctx context.Context, dto serializer.UserAddres
 
 // Delete 用户地址信息删除
 func (*UserAddressService) Delete(ctx context.Context, userAddressId uint64, userId uint64) serializer.ResponseResult {
-	userAddressDao := dao.NewUserAddressDao(ctx)
+	db := dao.NewDBClient(ctx)
+	userAddressDao := dao.NewUserAddressDao(db)
 
 	// 删除用户地址信息
 	row, err := userAddressDao.DeleteById(userId, userAddressId)
@@ -89,7 +92,8 @@ func (*UserAddressService) Delete(ctx context.Context, userAddressId uint64, use
 
 // Update 修改用户地址信息
 func (*UserAddressService) Update(ctx context.Context, dto serializer.UserAddressUpdateDTO, id uint64) serializer.ResponseResult {
-	userAddressDao := dao.NewUserAddressDao(ctx)
+	db := dao.NewDBClient(ctx)
+	userAddressDao := dao.NewUserAddressDao(db)
 
 	// 根据Id修改用户信息
 	row, err := userAddressDao.UpdateById(dto.Id, &model.UserAddress{

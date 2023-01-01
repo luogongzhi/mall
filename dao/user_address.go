@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"gorm.io/gorm"
 	"mall/model"
 )
@@ -10,8 +9,8 @@ type UserAddress struct {
 	*gorm.DB
 }
 
-func NewUserAddressDao(ctx context.Context) *UserAddress {
-	return &UserAddress{NewDBClient(ctx)}
+func NewUserAddressDao(db *gorm.DB) *UserAddress {
+	return &UserAddress{db}
 }
 
 // GetByUserId 根据用户id获取用户地址信息

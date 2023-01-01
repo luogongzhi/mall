@@ -15,8 +15,9 @@ type UserService struct{}
 
 // Register 用户注册
 func (*UserService) Register(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
-	userDao := dao.NewUserTransactionDao(ctx)
-	cartDao := dao.NewCartTransactionDao(ctx)
+	db := dao.NewTransactionDBClient(ctx)
+	userDao := dao.NewUserDao(db)
+	cartDao := dao.NewCartDao(db)
 
 	// 判断用户名是否存在
 	_, exist, err := userDao.ExistOrNotByUserName(dto.Username)
@@ -51,14 +52,14 @@ func (*UserService) Register(ctx context.Context, dto serializer.UserLoginRegist
 		Total:  0,
 	})
 	if err != nil {
-		utils.Rollback(userDao, cartDao)
+		db.Rollback()
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
 			Msg:  e.GetMsg(e.ErrorDatabase),
 		}
 	}
 
-	utils.Commit(userDao, cartDao)
+	db.Commit()
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),
@@ -67,7 +68,8 @@ func (*UserService) Register(ctx context.Context, dto serializer.UserLoginRegist
 
 // Login 用户登录
 func (*UserService) Login(ctx context.Context, dto serializer.UserLoginRegisterDTO) serializer.ResponseResult {
-	userDao := dao.NewUserDao(ctx)
+	db := dao.NewDBClient(ctx)
+	userDao := dao.NewUserDao(db)
 
 	// 判断用户名是否存在
 	user, exist, err := userDao.ExistOrNotByUserName(dto.Username)
@@ -113,7 +115,8 @@ func (*UserService) Login(ctx context.Context, dto serializer.UserLoginRegisterD
 
 // Detail 根据Id查询用户信息
 func (*UserService) Detail(ctx context.Context, id uint64) serializer.ResponseResult {
-	userDao := dao.NewUserDao(ctx)
+	db := dao.NewDBClient(ctx)
+	userDao := dao.NewUserDao(db)
 
 	// 根据id查询用户
 	user, _, _ := userDao.GetById(id)
@@ -128,7 +131,8 @@ func (*UserService) Detail(ctx context.Context, id uint64) serializer.ResponseRe
 
 // Update 修改用户信息
 func (*UserService) Update(ctx context.Context, dto serializer.UserUpdateDTO, id uint64) serializer.ResponseResult {
-	userDao := dao.NewUserDao(ctx)
+	db := dao.NewDBClient(ctx)
+	userDao := dao.NewUserDao(db)
 
 	var gender uint
 	switch dto.Gender {

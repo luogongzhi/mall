@@ -6,7 +6,6 @@ import (
 	"mall/dao"
 	"mall/model"
 	"mall/pkg/e"
-	"mall/pkg/utils"
 	"mall/serializer"
 	"net/http"
 	"sync"
@@ -138,11 +137,12 @@ func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.O
 	responseResultChan := make(chan serializer.ResponseResult, 3)
 	productListChan := make(chan []model.Product)
 
-	cartDao := dao.NewCartTransactionDao(ctx)
-	cartProductDao := dao.NewCartProductTransactionDao(ctx)
-	productDao := dao.NewProductTransactionDao(ctx)
-	orderDao := dao.NewOrderTransactionDao(ctx)
-	orderProductDao := dao.NewOrderProductTransactionDao(ctx)
+	db := dao.NewTransactionDBClient(ctx)
+	cartDao := dao.NewCartDao(db)
+	cartProductDao := dao.NewCartProductDao(db)
+	productDao := dao.NewProductDao(db)
+	orderDao := dao.NewOrderDao(db)
+	orderProductDao := dao.NewOrderProductDao(db)
 
 	// 根据用户查询该用户购物车
 	cart, err := cartDao.GetByUserId(userId)
@@ -179,10 +179,10 @@ func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.O
 	close(responseResultChan)
 	// 如果从chan拿到结果返回就代表有异常，回滚，返回
 	if responseResult, ok := <-responseResultChan; ok {
-		utils.Rollback(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
+		db.Rollback()
 		return responseResult
 	}
-	utils.Commit(cartDao, cartProductDao, productDao, orderDao, orderProductDao)
+	db.Commit()
 
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
@@ -191,7 +191,8 @@ func (*OrderService) Create(ctx context.Context, userId uint64, dto serializer.O
 }
 
 func (*OrderService) Update(ctx context.Context, userId uint64, dto serializer.OrderUpdateDTO) serializer.ResponseResult {
-	orderDao := dao.NewOrderDao(ctx)
+	db := dao.NewDBClient(ctx)
+	orderDao := dao.NewOrderDao(db)
 
 	//判断是否存在该订单Id
 	_, exist, err := orderDao.GetByOrderId(userId, dto.OrderId)
@@ -234,8 +235,9 @@ func (*OrderService) Update(ctx context.Context, userId uint64, dto serializer.O
 }
 
 func (*OrderService) List(ctx context.Context, userId uint64) serializer.ResponseResult {
-	orderDao := dao.NewOrderDao(ctx)
-	orderProductDao := dao.NewOrderProductDao(ctx)
+	db := dao.NewDBClient(ctx)
+	orderDao := dao.NewOrderDao(db)
+	orderProductDao := dao.NewOrderProductDao(db)
 
 	// 获取用户订单列
 	orderList, err := orderDao.GetListByUserId(userId)
@@ -284,9 +286,10 @@ func (*OrderService) List(ctx context.Context, userId uint64) serializer.Respons
 }
 
 func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) serializer.ResponseResult {
-	orderDao := dao.NewOrderDao(ctx)
-	orderProductDao := dao.NewOrderProductDao(ctx)
-	productDao := dao.NewProductDao(ctx)
+	db := dao.NewTransactionDBClient(ctx)
+	orderDao := dao.NewOrderDao(db)
+	orderProductDao := dao.NewOrderProductDao(db)
+	productDao := dao.NewProductDao(db)
 
 	//订单是不是用户的
 	order, exist, err := orderDao.GetByOrderId(userId, orderId)
@@ -324,7 +327,7 @@ func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) 
 	// 根据订单Id删除order_product
 	err = orderProductDao.DeleteByOrderId(orderId)
 	if err != nil {
-		utils.Rollback(productDao, orderDao, orderProductDao)
+		db.Rollback()
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
 			Msg:  e.GetMsg(e.ErrorDatabase),
@@ -336,7 +339,7 @@ func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) 
 		var product *model.Product
 		product, exist, err = productDao.GetById(orderProduct.ProductId)
 		if err != nil {
-			utils.Rollback(productDao, orderDao, orderProductDao)
+			db.Rollback()
 			return serializer.ResponseResult{
 				Code: e.ErrorDatabase,
 				Msg:  e.GetMsg(e.ErrorDatabase),
@@ -349,7 +352,7 @@ func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) 
 				Total: product.Total + orderProduct.Total,
 			})
 			if err != nil {
-				utils.Rollback(productDao, orderDao, orderProductDao)
+				db.Rollback()
 				return serializer.ResponseResult{
 					Code: e.ErrorDatabase,
 					Msg:  e.GetMsg(e.ErrorDatabase),
@@ -361,14 +364,14 @@ func (*OrderService) Delete(ctx context.Context, userId uint64, orderId uint64) 
 	// 删除order
 	err = orderDao.DeleteById(orderId)
 	if err != nil {
-		utils.Rollback(productDao, orderDao, orderProductDao)
+		db.Rollback()
 		return serializer.ResponseResult{
 			Code: e.ErrorDatabase,
 			Msg:  e.GetMsg(e.ErrorDatabase),
 		}
 	}
 
-	utils.Commit(productDao, orderDao, orderProductDao)
+	db.Commit()
 	return serializer.ResponseResult{
 		Code: http.StatusOK,
 		Msg:  e.GetMsg(http.StatusOK),

@@ -12,7 +12,8 @@ import (
 type ProductService struct{}
 
 func (*ProductService) Detail(ctx context.Context, id uint64) serializer.ResponseResult {
-	productDao := dao.NewProductDao(ctx)
+	db := dao.NewDBClient(ctx)
+	productDao := dao.NewProductDao(db)
 	product, exist, err := productDao.GetById(id)
 	if err != nil {
 		return serializer.ResponseResult{
@@ -37,7 +38,8 @@ func (*ProductService) Detail(ctx context.Context, id uint64) serializer.Respons
 }
 
 func (*ProductService) Create(ctx context.Context, dto serializer.ProductCreateDTO) serializer.ResponseResult {
-	productDao := dao.NewProductDao(ctx)
+	db := dao.NewDBClient(ctx)
+	productDao := dao.NewProductDao(db)
 	err := productDao.Create(&model.Product{
 		Title:     dto.Title,
 		Info:      dto.Info,
@@ -59,7 +61,8 @@ func (*ProductService) Create(ctx context.Context, dto serializer.ProductCreateD
 }
 
 func (*ProductService) Delete(ctx context.Context, id uint64) serializer.ResponseResult {
-	productDao := dao.NewProductDao(ctx)
+	db := dao.NewDBClient(ctx)
+	productDao := dao.NewProductDao(db)
 	_, exist, err := productDao.GetById(id)
 	if err != nil {
 		return serializer.ResponseResult{
@@ -89,7 +92,8 @@ func (*ProductService) Delete(ctx context.Context, id uint64) serializer.Respons
 }
 
 func (*ProductService) Update(ctx context.Context, dto serializer.ProductUpdateDTO) serializer.ResponseResult {
-	productDao := dao.NewProductDao(ctx)
+	db := dao.NewDBClient(ctx)
+	productDao := dao.NewProductDao(db)
 	_, exist, err := productDao.GetById(dto.Id)
 	if err != nil {
 		return serializer.ResponseResult{
@@ -126,7 +130,8 @@ func (*ProductService) Update(ctx context.Context, dto serializer.ProductUpdateD
 }
 
 func (*ProductService) List(ctx context.Context, dto serializer.PaginateDTO) serializer.ResponseResult {
-	productDao := dao.NewProductDao(ctx)
+	db := dao.NewDBClient(ctx)
+	productDao := dao.NewProductDao(db)
 
 	pageNum := dto.PageNum
 	pageSize := dto.PageSize

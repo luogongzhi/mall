@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"gorm.io/gorm"
 	"mall/model"
 )
@@ -10,12 +9,8 @@ type OrderProductDao struct {
 	*gorm.DB
 }
 
-func NewOrderProductDao(ctx context.Context) *OrderProductDao {
-	return &OrderProductDao{NewDBClient(ctx)}
-}
-
-func NewOrderProductTransactionDao(ctx context.Context) *OrderProductDao {
-	return &OrderProductDao{NewTransactionDBClient(ctx)}
+func NewOrderProductDao(db *gorm.DB) *OrderProductDao {
+	return &OrderProductDao{db}
 }
 
 func (dao *OrderProductDao) Create(orderProduct *model.OrderProduct) (err error) {

@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"gorm.io/gorm"
 	"mall/model"
 )
@@ -10,12 +9,8 @@ type UserDao struct {
 	*gorm.DB
 }
 
-func NewUserDao(ctx context.Context) *UserDao {
-	return &UserDao{NewDBClient(ctx)}
-}
-
-func NewUserTransactionDao(ctx context.Context) *UserDao {
-	return &UserDao{NewTransactionDBClient(ctx)}
+func NewUserDao(db *gorm.DB) *UserDao {
+	return &UserDao{db}
 }
 
 // GetById 根据id获取用户
